@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memória de Cálculo | Portal CIEE</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../assets/logo-oficial-2024.png" alt="Logo CIEE Rio">
+                <h2>Portal CIEE</h2>
+                <span>Gestão Corporativa</span>
+            </div>
+
+            <nav>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
+                <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
+                <a href="../producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
+                <a href="../importar-producao/index.html"><span class="nav-icon nav-icon-import" aria-hidden="true"></span>Importar dados</a>
+                <a href="../colaboradores/index.html"><span class="nav-icon nav-icon-people" aria-hidden="true"></span>Colaboradores</a>
+                <a class="active" href="./index.html"><span class="nav-icon nav-icon-memory" aria-hidden="true"></span>Memória de cálculo</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <span class="eyebrow">Governança dos indicadores</span>
+                    <h1>Memória de cálculo</h1>
+                    <p>Regras, fórmulas e parâmetros usados nos KPIs, metas, rankings, prévia mensal e força de trabalho.</p>
+                </div>
+            </header>
+
+            <section class="dashboard calculation-hero">
+                <div>
+                    <h2>Como a meta do próximo mês é formada</h2>
+                    <p>A prévia pega a competência vigente mais recente, copia a lista de colaboradores e zera todos os KPIs. Em seguida, calcula a meta da nova competência usando o histórico anterior disponível.</p>
+                </div>
+                <div class="formula-card">
+                    <span>Regra base</span>
+                    <strong>Meta = média histórica x (1 + percentual)</strong>
+                    <p>Percentual padrão: 10%, salvo configuração manual por célula/KPI.</p>
+                </div>
+            </section>
+
+            <section class="calculation-grid">
+                <article class="dashboard">
+                    <h2>Resumo das fórmulas</h2>
+                    <div class="formula-list" id="listaFormulas"></div>
+                </article>
+
+                <article class="dashboard">
+                    <h2>Prévia do próximo mês</h2>
+                    <div class="method-box">
+                        <p><strong>1.</strong> Localiza a competência mais recente salva no Firebase.</p>
+                        <p><strong>2.</strong> Cria a próxima competência. Exemplo: se a vigente for junho/2026, a prévia será julho/2026.</p>
+                        <p><strong>3.</strong> Copia os colaboradores da competência vigente e zera os KPIs.</p>
+                        <p><strong>4.</strong> Busca histórico anterior à prévia, limitado ao mesmo ano, para calcular as metas.</p>
+                        <p><strong>5.</strong> Se só houver 2 bases, a média será feita com essas 2 bases. O nome “últimos 5 meses” é o teto máximo da amostra, não uma exigência mínima.</p>
+                    </div>
+                    <div class="note-box">
+                        <strong>Exemplo prático:</strong>
+                        <span>Com bases de abril e maio, a prévia de junho usa a média de abril + maio. Com cinco ou mais bases, usa somente as cinco últimas anteriores à competência visualizada.</span>
+                    </div>
+                </article>
+            </section>
+
+            <section class="dashboard">
+                <h2>KPIs por célula</h2>
+                <p class="muted">Essas são as regras padrão. Se houver alteração salva em “Importar dados”, a configuração da competência substitui essa tabela a partir do mês configurado.</p>
+                <div class="table-scroll">
+                    <table class="ranking-table calculation-table">
+                        <thead>
+                            <tr>
+                                <th>Célula</th>
+                                <th>KPIs principais</th>
+                                <th>Como entra na meta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaKpisMemoria"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="calculation-grid">
+                <article class="dashboard">
+                    <h2>Jornada e meta individual</h2>
+                    <div class="method-box">
+                        <p><strong>Colaborador CLT:</strong> carga 8 horas, fator 1,00.</p>
+                        <p><strong>Estagiário:</strong> identificado quando o nome contém “(estagiária)” ou “(estagiário)”. Carga 6 horas, fator 0,75.</p>
+                        <p><strong>Meta individual:</strong> meta da célula/KPI dividida pela quantidade de pessoas que possuem aquele KPI.</p>
+                        <p><strong>Meta do estagiário:</strong> meta individual de 8h x 0,75.</p>
+                    </div>
+                </article>
+
+                <article class="dashboard">
+                    <h2>Fontes possíveis da meta</h2>
+                    <div class="source-list">
+                        <div><strong>Histórico da célula</strong><span>Média das últimas competências anteriores da mesma célula/KPI.</span></div>
+                        <div><strong>Referência geral do KPI</strong><span>Usada quando a célula ainda não tem histórico daquele KPI.</span></div>
+                        <div><strong>Piso estatístico</strong><span>Evita metas muito baixas; usa 70% da mediana individual equivalente a 8h.</span></div>
+                        <div><strong>Meta manual</strong><span>Quando preenchida, substitui a fórmula daquela célula/KPI/competência.</span></div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="dashboard">
+                <h2>Pesos do velocímetro</h2>
+                <p class="muted">O velocímetro não soma atividades “frias”. Ele converte atividades em pontos ponderados de esforço.</p>
+                <div class="table-scroll">
+                    <table class="ranking-table calculation-table">
+                        <thead>
+                            <tr>
+                                <th>KPI</th>
+                                <th>Peso padrão</th>
+                                <th>Conta</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaPesosMemoria"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/regras-producao.js"></script>
+    <script src="../../js/memoria-calculo.js"></script>
+</body>
+</html>
