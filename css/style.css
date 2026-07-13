@@ -783,6 +783,61 @@ input {
     white-space: nowrap;
 }
 
+.component-memory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.component-memory-card {
+    display: grid;
+    gap: 12px;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: #fbfdff;
+    padding: 14px;
+}
+
+.component-memory-card header {
+    display: grid;
+    gap: 4px;
+}
+
+.component-memory-card header span {
+    color: var(--laranja);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.component-memory-card h3 {
+    color: var(--azul);
+    font-size: 17px;
+}
+
+.component-memory-card dl {
+    display: grid;
+    gap: 10px;
+}
+
+.component-memory-card div {
+    display: grid;
+    gap: 3px;
+}
+
+.component-memory-card dt {
+    color: var(--azul-2);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.component-memory-card dd {
+    color: var(--muted);
+    line-height: 1.45;
+}
+
 .production-workspace {
     margin-bottom: 24px;
 }
@@ -2331,7 +2386,8 @@ tbody tr:last-child td {
     .content-grid,
     .workforce-grid,
     .calculation-grid,
-    .calculation-hero {
+    .calculation-hero,
+    .component-memory-grid {
         grid-template-columns: 1fr;
     }
 
