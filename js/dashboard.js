@@ -847,7 +847,7 @@ function renderizarForcaTrabalho() {
     const capacidade = calcularForcaTrabalho();
     const diagnostico = obterDiagnosticoCapacidade(capacidade.ocupacao);
     const angulo = limitarValor((capacidade.ocupacao / 140) * 180, 0, 180);
-    const celulas = capacidade.porCelula.slice(0, 6).map(celula => `
+    const celulas = capacidade.porCelula.map(celula => `
         <div class="capacity-cell-row">
             <div>
                 <strong>${escaparHtml(celula.celula)}</strong>
@@ -1016,7 +1016,7 @@ function renderizarForcaTrabalho() {
     const capacidade = calcularForcaTrabalho();
     const diagnostico = obterDiagnosticoCapacidade(capacidade.ocupacao);
     const angulo = limitarValor((capacidade.ocupacao / 120) * 180, 0, 180);
-    const celulas = capacidade.porCelula.slice(0, 6).map(celula => `
+    const celulas = capacidade.porCelula.map(celula => `
         <div class="capacity-cell-row">
             <div>
                 <strong>${escaparHtml(celula.celula)}</strong>
@@ -1204,7 +1204,7 @@ function renderizarForcaTrabalho() {
     const capacidade = calcularForcaTrabalho();
     const diagnostico = obterDiagnosticoCapacidade(capacidade.ocupacao);
     const angulo = limitarValor((capacidade.ocupacao / 120) * 180, 0, 180);
-    const celulas = capacidade.porCelula.slice(0, 6).map(celula => `
+    const celulas = capacidade.porCelula.map(celula => `
         <div class="capacity-cell-row">
             <div>
                 <strong>${escaparHtml(celula.celula)}</strong>
@@ -1439,7 +1439,7 @@ function renderizarForcaTrabalho() {
     const capacidade = calcularForcaTrabalho();
     const diagnostico = obterDiagnosticoCapacidade(capacidade.ocupacao, capacidade.percentualAcimaFaixa);
     const angulo = limitarValor((capacidade.ocupacao / 120) * 180, 0, 180);
-    const celulas = capacidade.porCelula.slice(0, 6).map(celula => `
+    const celulas = capacidade.porCelula.map(celula => `
         <div class="capacity-cell-row">
             <div>
                 <strong>${escaparHtml(celula.celula)}</strong>

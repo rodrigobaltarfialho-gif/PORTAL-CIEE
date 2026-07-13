@@ -1522,6 +1522,9 @@ input[type="file"] {
 .capacity-cell-list {
     display: grid;
     gap: 10px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .capacity-cell-row {
