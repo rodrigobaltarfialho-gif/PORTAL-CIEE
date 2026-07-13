@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal CEL</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="./assets/logo-oficial-2024.png" alt="Logo CIEE Rio">
+                <h2>Portal CIEE</h2>
+                <span>Gestão Corporativa</span>
+            </div>
+
+            <nav>
+                <a class="active" href="./index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="./modulos/sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
+                <a href="./modulos/desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
+                <a href="./modulos/producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
+                <a href="./modulos/importar-producao/index.html"><span class="nav-icon nav-icon-import" aria-hidden="true"></span>Importar dados</a>
+                <a href="./modulos/colaboradores/index.html"><span class="nav-icon nav-icon-people" aria-hidden="true"></span>Colaboradores</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <span class="eyebrow">Portal CEL</span>
+                    <h1>Dashboard Geral</h1>
+                    <p>Visão consolidada da operação e dos módulos de gestão.</p>
+                </div>
+            </header>
+
+            <section class="dashboard">
+                <h2>Área de trabalho</h2>
+                <p>Use o menu lateral para acessar os módulos de Sazonalidade e Produção.</p>
+
+                <div class="module-grid">
+                    <a class="module-tile" href="./modulos/sazonalidade/index.html">
+                        <span class="module-visual module-visual-season" aria-hidden="true"></span>
+                        <strong>Sazonalidade</strong>
+                        <span>Dashboard já integrado com filtros, gráficos e base online.</span>
+                    </a>
+                    <a class="module-tile" href="./modulos/producao/index.html">
+                        <span class="module-visual module-visual-production" aria-hidden="true"></span>
+                        <strong>Produção</strong>
+                        <span>Indicadores, metas e rankings da equipe.</span>
+                    </a>
+                    <a class="module-tile" href="./modulos/importar-producao/index.html">
+                        <span class="module-visual module-visual-import" aria-hidden="true"></span>
+                        <strong>Importar dados</strong>
+                        <span>Envie a planilha de produção e vincule ao mês correto.</span>
+                    </a>
+                    <a class="module-tile" href="./modulos/desligamentos/index.html">
+                        <span class="module-visual module-visual-exit" aria-hidden="true"></span>
+                        <strong>Desligamentos</strong>
+                        <span>Módulo reservado para a próxima etapa de importação.</span>
+                    </a>
+                    <a class="module-tile" href="./modulos/colaboradores/index.html">
+                        <span class="module-visual module-visual-people" aria-hidden="true"></span>
+                        <strong>Colaboradores</strong>
+                        <span>Perfil individual, evolução mensal, melhor mês e tendência.</span>
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="./js/auth.js"></script>
+</body>
+</html>

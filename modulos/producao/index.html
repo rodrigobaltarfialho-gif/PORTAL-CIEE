@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produção | Portal CIEE</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../assets/logo-oficial-2024.png" alt="Logo CIEE Rio">
+                <h2>Portal CIEE</h2>
+                <span>Gestão Corporativa</span>
+            </div>
+
+            <nav>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
+                <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
+                <a class="active" href="./index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
+                <a href="../importar-producao/index.html"><span class="nav-icon nav-icon-import" aria-hidden="true"></span>Importar dados</a>
+                <a href="../colaboradores/index.html"><span class="nav-icon nav-icon-people" aria-hidden="true"></span>Colaboradores</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <span class="eyebrow">Módulo de Produção</span>
+                    <h1>Produção</h1>
+                    <p>Gestão da produtividade, metas por KPI e ranking da equipe.</p>
+                </div>
+            </header>
+
+            <section class="dashboard production-workspace">
+                <div class="section-heading">
+                    <div>
+                        <h2>Resumo da competência</h2>
+                        <p>Escolha a competência que deseja analisar. Ao limpar o filtro, a tela volta para a competência vigente mais recente.</p>
+                    </div>
+
+                    <div class="filter-box">
+                        <label class="import-field">
+                            <span>Competência visualizada</span>
+                            <select id="filtroCompetenciaVisualizada">
+                                <option value="">Carregando...</option>
+                            </select>
+                        </label>
+                        <button type="button" class="secondary-button" id="limparCompetenciaVisualizada">Limpar filtro</button>
+                        <button type="button" class="secondary-button" id="verPreviaProximaCompetencia">Prévia próximo mês</button>
+                    </div>
+                </div>
+
+                <div id="resultadoImportacao" class="status-message muted">
+                    Carregando dados salvos...
+                </div>
+
+                <div id="cardsProducoes" class="kpi-grid kpi-grid-wide">
+                    <article class="kpi-card">
+                        <span>Funcionários</span>
+                        <strong>0</strong>
+                    </article>
+                    <article class="kpi-card">
+                        <span>Células ativas</span>
+                        <strong>0</strong>
+                    </article>
+                </div>
+            </section>
+
+            <section class="dashboard workforce-section">
+                <div class="section-heading">
+                    <div>
+                        <h2>Força de trabalho</h2>
+                        <p>Velocímetro de pressão operacional para avaliar se a equipe já está acima de uma faixa sustentável de trabalho.</p>
+                    </div>
+                </div>
+
+                <div id="forcaTrabalho" class="workforce-grid">
+                    <div class="empty-state">Aguardando importação.</div>
+                </div>
+            </section>
+
+            <section class="dashboard">
+                <div class="section-heading">
+                    <div>
+                        <h2>Evolução mensal</h2>
+                        <p>Sem filtro, mostra o geral. Com célula selecionada, mostra uma linha por funcionário da célula. Você pode selecionar várias células ou pessoas.</p>
+                    </div>
+
+                    <div class="filter-box">
+                        <div class="multi-filter" id="filtroCelulaProducao">
+                            <span>Células</span>
+                            <button type="button" class="multi-filter-button">Todas</button>
+                            <div class="multi-filter-menu"></div>
+                        </div>
+                        <div class="multi-filter" id="filtroFuncionarioProducao">
+                            <span>Funcionários</span>
+                            <button type="button" class="multi-filter-button">Todos</button>
+                            <div class="multi-filter-menu"></div>
+                        </div>
+                        <button type="button" class="secondary-button" id="limparFiltrosProducao">Limpar filtros</button>
+                    </div>
+                </div>
+                <div class="chart-card chart-card-tall">
+                    <canvas id="graficoEvolucaoProducao"></canvas>
+                </div>
+            </section>
+
+            <section class="content-grid production-rankings-grid">
+                <article class="dashboard metas-panel">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Metas por célula e KPI</h2>
+                            <p>As metas ficam agrupadas por célula para facilitar a leitura da operação.</p>
+                        </div>
+                    </div>
+                    <div id="cardsMetasCelulas" class="metas-grid">
+                        <div class="empty-state">Aguardando importação.</div>
+                    </div>
+                </article>
+
+                <article class="dashboard ranking-card">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Ranking geral</h2>
+                            <p>Ordenado pelo percentual de cumprimento da meta.</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap ranking-main-wrap">
+                        <table class="ranking-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Funcionário</th>
+                                    <th>% Meta</th>
+                                    <th>Célula</th>
+                                    <th>Produção</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaRankingGeral">
+                                <tr><td colspan="5">Aguardando importação.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="ranking-secondary">
+                        <div class="ranking-secondary-heading">
+                            <h3>Destaques por KPI</h3>
+                            <span>Melhor percentual individual em um KPI da célula</span>
+                        </div>
+                        <div class="table-wrap">
+                            <table class="ranking-table ranking-kpi-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Funcionário</th>
+                                        <th>KPI</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaRankingKpiDestaque">
+                                    <tr><td colspan="4">Aguardando importação.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="dashboard">
+                <div class="section-heading">
+                    <div>
+                        <h2>Produção por pessoa e célula</h2>
+                        <p>Meta individual padrão em 8h. Para nomes com “(estagiária)” ou “(estagiário)”, a meta é proporcional a 6h.</p>
+                    </div>
+                </div>
+                <div id="analisePessoasCelula" class="people-cell-grid">
+                    <div class="empty-state">Aguardando importação.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="../../js/regras-producao.js"></script>
+    <script src="../../js/mapa-colunas.js"></script>
+    <script src="../../js/padronizador.js"></script>
+    <script src="../../js/core/store.js"></script>
+    <script src="../../js/core/utils.js"></script>
+    <script src="../../js/core/kpis.js"></script>
+    <script src="../../js/core/metas.js"></script>
+    <script src="../../js/core/ranking.js"></script>
+    <script src="../../js/core/motor.js"></script>
+    <script src="../../js/dashboard.js"></script>
+    <script src="../../js/firebase-producao.js"></script>
+    <script src="../../js/auth.js"></script>
+</body>
+</html>

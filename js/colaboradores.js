@@ -1,0 +1,666 @@
+(async function iniciarColaboradores() {
+    const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
+    const firestore = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+
+    const {
+        collection,
+        doc,
+        getDocsFromServer,
+        initializeFirestore,
+        memoryLocalCache
+    } = firestore;
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyD7OHPZ8flOUGyCrdL3Sp-ZTASj03Dbn94",
+        authDomain: "portal-producao-d3a08.firebaseapp.com",
+        projectId: "portal-producao-d3a08",
+        storageBucket: "portal-producao-d3a08.firebasestorage.app",
+        messagingSenderId: "881576324700",
+        appId: "1:881576324700:web:c68bdbe4c309d5fd1f4099"
+    };
+
+    const app = firebaseApp.initializeApp(firebaseConfig, "colaboradores");
+    const db = initializeFirestore(app, { localCache: memoryLocalCache() });
+    const estado = {
+        competencias: [],
+        colaboradores: new Map(),
+        grafico: null
+    };
+
+    const nomesMesesCurtos = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+    function setStatus(tipo, texto) {
+        const status = document.getElementById("statusColaboradores");
+
+        if (!status) {
+            return;
+        }
+
+        status.className = `status-message ${tipo || "muted"}`;
+        status.textContent = texto;
+    }
+
+    function escaparHtml(valor) {
+        return String(valor || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+    }
+
+    function slugFotoFuncionario(nome) {
+        return String(nome || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/\([^)]*\)/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+    }
+
+    function iniciaisFuncionario(nome) {
+        const partes = String(nome || "")
+            .replace(/\([^)]*\)/g, "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+        if (!partes.length) {
+            return "?";
+        }
+
+        return `${partes[0][0] || ""}${partes.length > 1 ? partes[partes.length - 1][0] : ""}`.toUpperCase();
+    }
+
+    window.trocarFotoColaborador = function trocarFotoColaborador(img) {
+        const fallbacks = JSON.parse(img.dataset.fallbacks || "[]");
+        const proxima = fallbacks.shift();
+
+        if (proxima) {
+            img.dataset.fallbacks = JSON.stringify(fallbacks);
+            img.src = proxima;
+            return;
+        }
+
+        img.style.display = "none";
+        img.nextElementSibling.style.display = "grid";
+    };
+
+    function avatarColaborador(nome) {
+        const slug = slugFotoFuncionario(nome);
+        const iniciais = iniciaisFuncionario(nome);
+        const caminhos = [
+            `../../assets/funcionarios/${slug}.jpg`,
+            `../../assets/funcionarios/${slug}.jpeg`,
+            `../../assets/funcionarios/${slug}.png`,
+            `../../assets/funcionarios/${slug}.png.png`
+        ];
+
+        return `
+            <span id="colaboradorAvatar" class="avatar avatar-lg">
+                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(nome)}" onerror="trocarFotoColaborador(this);">
+                <b>${escaparHtml(iniciais)}</b>
+            </span>
+        `;
+    }
+
+    function avatarDestaque(nome) {
+        const slug = slugFotoFuncionario(nome);
+        const iniciais = iniciaisFuncionario(nome);
+        const caminhos = [
+            `../../assets/funcionarios/${slug}.jpg`,
+            `../../assets/funcionarios/${slug}.jpeg`,
+            `../../assets/funcionarios/${slug}.png`,
+            `../../assets/funcionarios/${slug}.png.png`
+        ];
+
+        return `
+            <span class="avatar podium-avatar">
+                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(nome)}" onerror="trocarFotoColaborador(this);">
+                <b>${escaparHtml(iniciais)}</b>
+            </span>
+        `;
+    }
+
+    function labelCompetencia(competencia) {
+        const mes = Number(String(competencia).slice(5, 7));
+        const ano = String(competencia).slice(0, 4);
+
+        return `${nomesMesesCurtos[mes - 1] || competencia}/${ano}`;
+    }
+
+    function getChunksCollection(competencia) {
+        return collection(db, "producao_competencias", competencia, "chunks");
+    }
+
+    async function carregarLinhasDaCompetencia(competencia) {
+        const snap = await getDocsFromServer(getChunksCollection(competencia));
+        const chunks = [];
+
+        snap.forEach(item => chunks.push(item.data()));
+        chunks.sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+
+        return chunks.flatMap(chunk => chunk.rows || []);
+    }
+
+    async function listarCompetencias() {
+        const snap = await getDocsFromServer(collection(db, "producao_competencias"));
+        const competencias = [];
+
+        snap.forEach(item => {
+            const data = item.data();
+            competencias.push(data.competencia || item.id);
+        });
+
+        return competencias
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b));
+    }
+
+    function processarCompetencia(competencia, linhas, historicoAnterior) {
+        dadosProducao.competencia = competencia;
+        dadosProducao.historico = historicoAnterior;
+
+        const funcionarios = linhas
+            .filter(funcionario => funcionario.nome || funcionario.email)
+            .map(processarFuncionario);
+        const metas = calcularMetasPorCelula(funcionarios, historicoAnterior, competencia);
+
+        return aplicarMetasEDesempenho(funcionarios, metas);
+    }
+
+    function adicionarAoMapa(funcionario, competencia) {
+        const id = valorFuncionario(funcionario);
+
+        if (!estado.colaboradores.has(id)) {
+            estado.colaboradores.set(id, {
+                id,
+                nome: funcionario.nome,
+                email: funcionario.email,
+                celula: funcionario.celula,
+                jornada: funcionario.jornada,
+                meses: []
+            });
+        }
+
+        const colaborador = estado.colaboradores.get(id);
+        colaborador.nome = funcionario.nome || colaborador.nome;
+        colaborador.email = funcionario.email || colaborador.email;
+        colaborador.celula = funcionario.celula || colaborador.celula;
+        colaborador.jornada = funcionario.jornada || colaborador.jornada;
+        colaborador.meses.push({
+            competencia,
+            producao: funcionario.totalPrincipal,
+            meta: funcionario.metaTotal,
+            percentual: funcionario.percentualGeral,
+            principais: funcionario.principais,
+            metas: funcionario.metas,
+            desempenho: funcionario.desempenho
+        });
+    }
+
+    async function carregarDados() {
+        estado.competencias = await listarCompetencias();
+
+        if (!estado.competencias.length) {
+            setStatus("muted", "Nenhuma base de produção foi encontrada no Firebase.");
+            return;
+        }
+
+        const historicoAnterior = [];
+
+        for (const competencia of estado.competencias) {
+            const linhas = await carregarLinhasDaCompetencia(competencia);
+            const processados = processarCompetencia(competencia, linhas, historicoAnterior);
+
+            processados.forEach(funcionario => adicionarAoMapa(funcionario, competencia));
+            historicoAnterior.push(...linhas.map(linha => ({ ...linha, competencia })));
+        }
+
+        preencherSelect();
+        renderizarMuralDestaques();
+        setStatus("success", `${estado.colaboradores.size} colaboradores carregados.`);
+    }
+
+    function preencherSelect() {
+        const select = document.getElementById("selectColaborador");
+        const colaboradores = [...estado.colaboradores.values()]
+            .sort((a, b) => a.nome.localeCompare(b.nome));
+
+        select.innerHTML = `<option value="">Selecione um colaborador</option>` + colaboradores
+            .map(colaborador => `<option value="${escaparHtml(colaborador.id)}">${escaparHtml(colaborador.nome)}</option>`)
+            .join("");
+    }
+
+    function obterDestaquesDaUltimaCompetencia() {
+        const competencia = estado.competencias[estado.competencias.length - 1];
+
+        if (!competencia) {
+            return {
+                competencia: null,
+                destaques: []
+            };
+        }
+
+        const destaques = [...estado.colaboradores.values()]
+            .map(colaborador => {
+                const mes = colaborador.meses.find(item => item.competencia === competencia);
+
+                if (!mes) {
+                    return null;
+                }
+
+                return {
+                    nome: colaborador.nome,
+                    celula: colaborador.celula,
+                    producao: mes.producao,
+                    meta: mes.meta,
+                    percentual: Number(mes.percentual || 0)
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.percentual - a.percentual)
+            .slice(0, 3);
+
+        return {
+            competencia,
+            destaques
+        };
+    }
+
+    function renderizarMuralDestaques() {
+        const mural = document.getElementById("muralDestaques");
+        const subtitulo = document.getElementById("competenciaDestaques");
+
+        if (!mural) {
+            return;
+        }
+
+        const { competencia, destaques } = obterDestaquesDaUltimaCompetencia();
+
+        if (subtitulo && competencia) {
+            subtitulo.textContent = `Top colaboradores em ${labelCompetencia(competencia)}, considerando o percentual de meta atingida.`;
+        }
+
+        if (!destaques.length) {
+            mural.innerHTML = `<div class="empty-state">Nenhum destaque encontrado na última competência.</div>`;
+            return;
+        }
+
+        const classes = ["first", "second", "third"];
+        const ordemVisual = destaques.length > 1 ? [1, 0, 2] : [0];
+        const cards = ordemVisual
+            .filter(indice => destaques[indice])
+            .map(indice => {
+                const destaque = destaques[indice];
+                const posicao = indice + 1;
+
+                return `
+                    <article class="podium-place ${classes[indice]}" style="--delay:${indice * 90}ms">
+                        <span class="podium-rank">${posicao}º</span>
+                        ${avatarDestaque(destaque.nome)}
+                        <strong>${escaparHtml(destaque.nome)}</strong>
+                        <small>${escaparHtml(destaque.celula || "-")}</small>
+                        <div class="podium-score">${formatarNumero(destaque.percentual)}%</div>
+                        <p>${formatarNumero(destaque.producao)} de ${formatarNumero(destaque.meta)} pontos</p>
+                    </article>
+                `;
+            })
+            .join("");
+
+        mural.innerHTML = cards;
+    }
+
+    function obterEvolucoesMensais() {
+        const competenciaAtual = estado.competencias[estado.competencias.length - 1];
+        const competenciaAnterior = estado.competencias[estado.competencias.length - 2];
+
+        if (!competenciaAtual || !competenciaAnterior) {
+            return {
+                competenciaAtual,
+                competenciaAnterior,
+                destaques: []
+            };
+        }
+
+        const destaques = [...estado.colaboradores.values()]
+            .map(colaborador => {
+                const atual = colaborador.meses.find(item => item.competencia === competenciaAtual);
+                const anterior = colaborador.meses.find(item => item.competencia === competenciaAnterior);
+
+                if (!atual || !anterior) {
+                    return null;
+                }
+
+                const percentualAtual = Number(atual.percentual || 0);
+                const percentualAnterior = Number(anterior.percentual || 0);
+                const evolucao = percentualAtual - percentualAnterior;
+
+                return {
+                    nome: colaborador.nome,
+                    celula: colaborador.celula,
+                    percentualAtual,
+                    percentualAnterior,
+                    evolucao
+                };
+            })
+            .filter(item => item && item.evolucao > 0)
+            .sort((a, b) => b.evolucao - a.evolucao)
+            .slice(0, 3);
+
+        return {
+            competenciaAtual,
+            competenciaAnterior,
+            destaques
+        };
+    }
+
+    function obterDestaquesExtras() {
+        const competencia = estado.competencias[estado.competencias.length - 1];
+        const colaboradores = [...estado.colaboradores.values()];
+        const maiorProducao = colaboradores
+            .map(colaborador => {
+                const mes = colaborador.meses.find(item => item.competencia === competencia);
+
+                if (!mes) {
+                    return null;
+                }
+
+                return {
+                    nome: colaborador.nome,
+                    celula: colaborador.celula,
+                    valor: Number(mes.producao || 0),
+                    detalhe: `${formatarNumero(mes.percentual)}% da meta`
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.valor - a.valor)[0];
+
+        const maisConstante = colaboradores
+            .map(colaborador => {
+                const ultimosMeses = colaborador.meses.slice(-3);
+
+                if (ultimosMeses.length < 3) {
+                    return null;
+                }
+
+                const media = ultimosMeses.reduce((total, mes) => total + Number(mes.percentual || 0), 0) / ultimosMeses.length;
+                const menorMes = Math.min(...ultimosMeses.map(mes => Number(mes.percentual || 0)));
+
+                return {
+                    nome: colaborador.nome,
+                    celula: colaborador.celula,
+                    valor: media,
+                    detalhe: `Menor mês: ${formatarNumero(menorMes)}%`
+                };
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.valor - a.valor)[0];
+
+        return {
+            maiorProducao,
+            maisConstante
+        };
+    }
+
+    function renderizarPodio(titulo, descricao, destaques, tipo) {
+        if (!destaques.length) {
+            return `
+                <section class="highlight-panel">
+                    <div class="highlight-panel-heading">
+                        <h3>${escaparHtml(titulo)}</h3>
+                        <p>${escaparHtml(descricao)}</p>
+                    </div>
+                    <div class="empty-state">Ainda não há dados suficientes para este destaque.</div>
+                </section>
+            `;
+        }
+
+        const classes = ["first", "second", "third"];
+        const ordemVisual = destaques.length > 1 ? [1, 0, 2] : [0];
+        const cards = ordemVisual
+            .filter(indice => destaques[indice])
+            .map(indice => {
+                const destaque = destaques[indice];
+                const posicao = indice + 1;
+                const metrica = tipo === "evolucao"
+                    ? `+${formatarNumero(destaque.evolucao)} p.p.`
+                    : `${formatarNumero(destaque.percentual)}%`;
+                const detalhe = tipo === "evolucao"
+                    ? `${formatarNumero(destaque.percentualAnterior)}% para ${formatarNumero(destaque.percentualAtual)}%`
+                    : `${formatarNumero(destaque.producao)} de ${formatarNumero(destaque.meta)} pontos`;
+
+                const seloPosicao = posicao === 1
+                    ? `<span class="podium-trophy" aria-label="Troféu">&#127942;</span><span class="podium-rank gold">1º</span>`
+                    : `<span class="podium-medal ${posicao === 2 ? "silver" : "bronze"}" aria-label="${posicao}º lugar">${posicao}</span>`;
+
+                return `
+                    <article class="podium-place ${classes[indice]} ${tipo === "evolucao" ? "growth" : ""}" style="--delay:${indice * 90}ms">
+                        ${seloPosicao}
+                        ${avatarDestaque(destaque.nome)}
+                        <strong>${escaparHtml(destaque.nome)}</strong>
+                        <small>${escaparHtml(destaque.celula || "-")}</small>
+                        <div class="podium-score">${metrica}</div>
+                        <p>${detalhe}</p>
+                    </article>
+                `;
+            })
+            .join("");
+
+        return `
+            <section class="highlight-panel">
+                <div class="highlight-panel-heading">
+                    <h3>${escaparHtml(titulo)}</h3>
+                    <p>${escaparHtml(descricao)}</p>
+                </div>
+                <div class="podium-board">${cards}</div>
+            </section>
+        `;
+    }
+
+    function renderizarCardExtra(titulo, destaque, tipo) {
+        if (!destaque) {
+            return "";
+        }
+
+        const valor = tipo === "producao"
+            ? formatarNumero(destaque.valor)
+            : `${formatarNumero(destaque.valor)}%`;
+
+        return `
+            <article class="highlight-mini-card">
+                <span>${escaparHtml(titulo)}</span>
+                ${avatarDestaque(destaque.nome)}
+                <strong>${escaparHtml(destaque.nome)}</strong>
+                <small>${escaparHtml(destaque.celula || "-")}</small>
+                <b>${valor}</b>
+                <p>${escaparHtml(destaque.detalhe)}</p>
+            </article>
+        `;
+    }
+
+    function renderizarMuralDestaques() {
+        const mural = document.getElementById("muralDestaques");
+        const subtitulo = document.getElementById("competenciaDestaques");
+
+        if (!mural) {
+            return;
+        }
+
+        const { competencia, destaques } = obterDestaquesDaUltimaCompetencia();
+        const evolucoes = obterEvolucoesMensais();
+        const extras = obterDestaquesExtras();
+
+        if (subtitulo && competencia) {
+            subtitulo.textContent = `Destaques em ${labelCompetencia(competencia)}, com ranking atual, evolução mensal e reconhecimentos extras.`;
+        }
+
+        if (!destaques.length && !evolucoes.destaques.length) {
+            mural.innerHTML = `<div class="empty-state">Nenhum destaque encontrado na última competência.</div>`;
+            return;
+        }
+
+        mural.innerHTML = `
+            ${renderizarPodio("Pódio da competência", `Melhores percentuais em ${labelCompetencia(competencia)}.`, destaques, "meta")}
+            ${renderizarPodio("Pódio de evolução", evolucoes.competenciaAnterior ? `Maiores crescimentos de ${labelCompetencia(evolucoes.competenciaAnterior)} para ${labelCompetencia(evolucoes.competenciaAtual)}.` : "Maiores crescimentos de um mês para o outro.", evolucoes.destaques, "evolucao")}
+            <section class="highlight-extras">
+                ${renderizarCardExtra("Maior produção", extras.maiorProducao, "producao")}
+                ${renderizarCardExtra("Maior constância", extras.maisConstante, "constancia")}
+            </section>
+        `;
+    }
+
+    function obterTendencia(meses) {
+        const validos = meses.filter(item => Number.isFinite(item.percentual));
+
+        if (validos.length < 2) {
+            return {
+                texto: "Sem histórico",
+                classe: "neutral"
+            };
+        }
+
+        const anterior = validos[validos.length - 2].percentual;
+        const atual = validos[validos.length - 1].percentual;
+        const diferenca = atual - anterior;
+
+        if (diferenca >= 5) {
+            return {
+                texto: "Em alta",
+                classe: "up"
+            };
+        }
+
+        if (diferenca <= -5) {
+            return {
+                texto: "Em queda",
+                classe: "down"
+            };
+        }
+
+        return {
+            texto: "Na mesma",
+            classe: "neutral"
+        };
+    }
+
+    function melhorMes(meses) {
+        return [...meses].sort((a, b) => Number(b.percentual || 0) - Number(a.percentual || 0))[0] || null;
+    }
+
+    function renderizarTabela(colaborador) {
+        const tabela = document.getElementById("tabelaMensalColaborador");
+
+        tabela.innerHTML = colaborador.meses.map(item => `
+            <tr>
+                <td>${labelCompetencia(item.competencia)}</td>
+                <td>${formatarNumero(item.producao)}</td>
+                <td>${formatarNumero(item.meta)}</td>
+                <td><span class="badge ${item.percentual >= 100 ? "badge-success" : item.percentual >= 80 ? "badge-warning" : "badge-danger"}">${formatarNumero(item.percentual)}%</span></td>
+            </tr>
+        `).join("");
+    }
+
+    function renderizarGrafico(colaborador) {
+        const canvas = document.getElementById("graficoColaborador");
+
+        if (!canvas || typeof Chart === "undefined") {
+            return;
+        }
+
+        if (typeof ChartDataLabels !== "undefined") {
+            Chart.register(ChartDataLabels);
+        }
+
+        if (estado.grafico) {
+            estado.grafico.destroy();
+        }
+
+        estado.grafico = new Chart(canvas.getContext("2d"), {
+            type: "line",
+            data: {
+                labels: colaborador.meses.map(item => labelCompetencia(item.competencia)),
+                datasets: [{
+                    label: "% da meta",
+                    data: colaborador.meses.map(item => item.percentual),
+                    borderColor: "#003b71",
+                    backgroundColor: "rgba(0, 94, 168, .12)",
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: .28,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: contexto => `${formatarNumero(contexto.parsed.y)}% da meta`
+                        }
+                    },
+                    datalabels: {
+                        display: contexto => Boolean(contexto.dataset.data[contexto.dataIndex]),
+                        formatter: valor => `${formatarNumero(valor)}%`,
+                        backgroundColor: "#003b71",
+                        color: "#fff",
+                        borderRadius: 5,
+                        padding: 5,
+                        align: "top",
+                        anchor: "end",
+                        font: { weight: "bold", size: 10 }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: valor => `${formatarNumero(valor)}%`
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    function selecionarColaborador(id) {
+        const painel = document.getElementById("painelColaborador");
+
+        if (!id || !estado.colaboradores.has(id)) {
+            painel.hidden = true;
+            return;
+        }
+
+        const colaborador = estado.colaboradores.get(id);
+        const meses = colaborador.meses;
+        const ultimo = meses[meses.length - 1];
+        const melhor = melhorMes(meses);
+        const tendencia = obterTendencia(meses);
+
+        painel.hidden = false;
+        document.getElementById("colaboradorAvatar").outerHTML = avatarColaborador(colaborador.nome);
+        document.getElementById("colaboradorNome").textContent = colaborador.nome;
+        document.getElementById("colaboradorSubtitulo").textContent = `${colaborador.celula || "-"} | ${colaborador.email || "-"} | ${colaborador.jornada?.tipo || "-"}`;
+        document.getElementById("colaboradorUltimaMeta").textContent = `${formatarNumero(ultimo?.percentual || 0)}%`;
+        document.getElementById("colaboradorMelhorMes").textContent = melhor ? `${labelCompetencia(melhor.competencia)} (${formatarNumero(melhor.percentual)}%)` : "-";
+        document.getElementById("colaboradorTendencia").textContent = tendencia.texto;
+        document.getElementById("colaboradorTendencia").className = `trend-${tendencia.classe}`;
+        document.getElementById("colaboradorMeses").textContent = formatarNumero(meses.length);
+
+        renderizarTabela(colaborador);
+        renderizarGrafico(colaborador);
+    }
+
+    document.getElementById("selectColaborador").addEventListener("change", event => selecionarColaborador(event.target.value));
+
+    carregarDados().catch(erro => {
+        console.error(erro);
+        setStatus("error", `Erro ao carregar colaboradores: ${erro.message}`);
+    });
+})();

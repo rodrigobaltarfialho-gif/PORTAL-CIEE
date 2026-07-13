@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuários | Portal CIEE</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../assets/logo-oficial-2024.png" alt="Logo CIEE Rio">
+                <h2>Portal CIEE</h2>
+                <span>Gestão Corporativa</span>
+            </div>
+
+            <nav>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
+                <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
+                <a href="../producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
+                <a href="../importar-producao/index.html"><span class="nav-icon nav-icon-import" aria-hidden="true"></span>Importar dados</a>
+                <a href="../colaboradores/index.html"><span class="nav-icon nav-icon-people" aria-hidden="true"></span>Colaboradores</a>
+                <a class="active" href="./index.html"><span class="nav-icon nav-icon-users" aria-hidden="true"></span>Usuários</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <span class="eyebrow">Administração</span>
+                    <h1>Cadastro de logins</h1>
+                    <p>Crie novos acessos simples para o portal. O usuário Rodrigo permanece como administrador principal.</p>
+                </div>
+            </header>
+
+            <section class="content-grid user-admin-grid">
+                <article class="dashboard user-form-card">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Novo login</h2>
+                            <p>Cadastre usuário e senha para acesso ao portal.</p>
+                        </div>
+                    </div>
+
+                    <form id="formUsuario" class="user-form">
+                        <label>
+                            <span>Nome</span>
+                            <input type="text" id="usuarioNome" required>
+                        </label>
+                        <label>
+                            <span>Usuario</span>
+                            <input type="text" id="usuarioLogin" required>
+                        </label>
+                        <label>
+                            <span>Senha</span>
+                            <input type="password" id="usuarioSenha" required>
+                        </label>
+                        <button type="submit">Cadastrar login</button>
+                    </form>
+                </article>
+
+                <article class="dashboard">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Logins cadastrados</h2>
+                            <p>Lista salva no Firebase para funcionar no link publicado.</p>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Usuario</th>
+                                    <th>Perfil</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaUsuarios">
+                                <tr><td colspan="4">Nenhum usuário cadastrado.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    <script src="../../js/auth.js"></script>
+    <script src="../../js/usuarios.js"></script>
+</body>
+</html>

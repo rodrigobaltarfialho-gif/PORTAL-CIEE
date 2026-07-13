@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Portal CIEE</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-card">
+            <div>
+                <span class="eyebrow">Portal CIEE</span>
+                <h1>Acesso ao portal</h1>
+                <p>Informe o usuario e senha cadastrados para continuar.</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <label>
+                    <span>Usuario</span>
+                    <input type="text" id="loginUsuario" autocomplete="username" required>
+                </label>
+                <label>
+                    <span>Senha</span>
+                    <input type="password" id="loginSenha" autocomplete="current-password" required>
+                </label>
+                <div id="loginMensagem" class="login-message" hidden></div>
+                <button type="submit">Entrar</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="./js/auth.js"></script>
+</body>
+</html>

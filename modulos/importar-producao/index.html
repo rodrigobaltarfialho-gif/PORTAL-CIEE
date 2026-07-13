@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Dados | Portal CIEE</title>
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../../assets/logo-oficial-2024.png" alt="Logo CIEE Rio">
+                <h2>Portal CIEE</h2>
+                <span>Gestão Corporativa</span>
+            </div>
+
+            <nav>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
+                <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
+                <a href="../producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
+                <a class="active" href="./index.html"><span class="nav-icon nav-icon-import" aria-hidden="true"></span>Importar dados</a>
+                <a href="../colaboradores/index.html"><span class="nav-icon nav-icon-people" aria-hidden="true"></span>Colaboradores</a>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header class="topbar">
+                <div>
+                    <span class="eyebrow">Dados de produção</span>
+                    <h1>Importar dados</h1>
+                    <p>Envie a planilha de produção e informe a competência correta para salvar no Firebase.</p>
+                </div>
+            </header>
+
+            <section class="dashboard production-workspace">
+                <div class="section-heading">
+                    <div>
+                        <h2>Importação da competência</h2>
+                        <p>Este mês será usado para identificar a base nos gráficos e no histórico.</p>
+                    </div>
+
+                    <div class="import-box">
+                        <label class="import-field">
+                            <span>Competência da importação</span>
+                            <input type="month" id="competenciaProducao">
+                        </label>
+                        <input type="file" id="arquivoProducao" accept=".xlsx,.xls">
+                        <button type="button" onclick="importarProducao()">Validar planilha</button>
+                    </div>
+                </div>
+
+                <div id="resultadoImportacao" class="status-message muted">
+                    Selecione a competência e a planilha para iniciar.
+                </div>
+
+                <div id="preValidacaoImportacao" class="import-validation" hidden></div>
+            </section>
+
+            <section class="dashboard parameters-workspace">
+                <div class="section-heading">
+                    <div>
+                        <h2>Parâmetros da competência</h2>
+                        <p>Ajuste metas por célula/KPI e pesos do velocímetro antes ou depois de atualizar a base.</p>
+                    </div>
+                </div>
+
+                <div class="parameters-grid">
+                    <article class="parameter-card">
+                        <h3>Metas por célula e KPI</h3>
+                        <div class="parameter-form">
+                            <label>
+                                <span>Competência</span>
+                                <input type="month" id="parametroMetaCompetencia">
+                            </label>
+                            <label>
+                                <span>Célula</span>
+                                <select id="parametroMetaCelula">
+                                    <option value="">Carregando células...</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>KPI</span>
+                                <select id="parametroMetaKpi"></select>
+                            </label>
+                            <label>
+                                <span>Acréscimo %</span>
+                                <input type="number" id="parametroMetaPercentual" min="0" step="1" value="10">
+                            </label>
+                            <label>
+                                <span>Meta manual</span>
+                                <input type="number" id="parametroMetaManual" min="0" step="1" placeholder="Opcional: substitui a fórmula">
+                            </label>
+                            <p class="parameter-help parameter-form-wide">Meta manual é um número fechado para substituir a fórmula daquela célula/KPI na competência. Se ficar vazio, o sistema usa percentual, histórico e piso estatístico.</p>
+                            <label class="parameter-form-wide">
+                                <span>Observação</span>
+                                <input type="text" id="parametroMetaObservacao" placeholder="Motivo do ajuste">
+                            </label>
+                        </div>
+                        <div class="parameter-actions">
+                            <button type="button" onclick="salvarParametroMeta()">Salvar meta</button>
+                            <button type="button" class="secondary-button" onclick="voltarParametroMetaPadrao()">Voltar meta ao padrão</button>
+                        </div>
+                    </article>
+
+                    <article class="parameter-card">
+                        <h3>Pesos do velocímetro</h3>
+                        <div id="parametrosPesosVelocimetro" class="parameter-weight-list"></div>
+                        <div class="parameter-actions">
+                            <button type="button" onclick="salvarParametrosPesos()">Salvar pesos</button>
+                            <button type="button" class="secondary-button" onclick="voltarPesosPadrao()">Voltar pesos ao padrão</button>
+                        </div>
+                    </article>
+
+                    <article class="parameter-card parameter-card-wide">
+                        <h3>KPIs ativos por célula</h3>
+                        <div class="parameter-form">
+                            <label>
+                                <span>Competência</span>
+                                <input type="month" id="parametroKpiCompetencia">
+                            </label>
+                            <label>
+                                <span>Célula</span>
+                                <select id="parametroKpiCelula">
+                                    <option value="">Carregando células...</option>
+                                </select>
+                            </label>
+                            <p class="parameter-help">Escolha quais KPIs entram na meta da célula nessa competência. Se não configurar nada no mês seguinte, continua usando a última configuração salva.</p>
+                        </div>
+                        <div id="parametrosKpisCelula" class="parameter-checkbox-list"></div>
+                        <div class="parameter-actions">
+                            <button type="button" onclick="salvarParametrosKpisCelula()">Salvar KPIs da célula</button>
+                            <button type="button" class="secondary-button" onclick="voltarKpisCelulaPadrao()">Voltar KPIs ao padrão</button>
+                        </div>
+                    </article>
+                </div>
+
+                <div class="parameter-history">
+                    <div class="section-heading">
+                        <div>
+                            <h3>Histórico de alterações</h3>
+                            <p>Últimos ajustes registrados nos parâmetros.</p>
+                        </div>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Competência</th>
+                                    <th>Detalhe</th>
+                                    <th>Novo valor</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicoParametrosProducao">
+                                <tr><td colspan="5">Nenhuma alteração registrada.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dashboard">
+                <div class="section-heading">
+                    <div>
+                        <h2>Depois da importação</h2>
+                        <p>Ao concluir, acesse Produção para visualizar a competência importada ou comparar com outras bases salvas.</p>
+                    </div>
+                    <a class="secondary-button" href="../producao/index.html">Ver produção</a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="../../js/regras-producao.js"></script>
+    <script src="../../js/mapa-colunas.js"></script>
+    <script src="../../js/padronizador.js"></script>
+    <script src="../../js/core/store.js"></script>
+    <script src="../../js/core/utils.js"></script>
+    <script src="../../js/core/kpis.js"></script>
+    <script src="../../js/core/metas.js"></script>
+    <script src="../../js/core/ranking.js"></script>
+    <script src="../../js/core/motor.js"></script>
+    <script src="../../js/dashboard.js"></script>
+    <script src="../../js/importador.js"></script>
+    <script src="../../js/firebase-producao.js"></script>
+    <script src="../../js/auth.js"></script>
+</body>
+</html>
