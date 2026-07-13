@@ -1517,14 +1517,17 @@ input[type="file"] {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 0;
 }
 
 .capacity-cell-list {
     display: grid;
     gap: 10px;
-    max-height: 360px;
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding-right: 4px;
+    align-content: start;
 }
 
 .capacity-cell-row {
