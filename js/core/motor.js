@@ -31,18 +31,39 @@ function valorFuncionario(funcionario) {
     return funcionario?.id || chaveFuncionario(funcionario);
 }
 
-function processarFuncionario(funcionario) {
+function obterAvaliacaoMetaFuncionario(funcionarioId) {
+    const dados = dadosProducao.avaliacoesMeta?.[funcionarioId] || {};
+    const semanasInformadas = Number(dados.semanasAtivas);
+    const semanasAtivas = Number.isFinite(semanasInformadas)
+        ? Math.max(0, Math.min(4, semanasInformadas))
+        : 4;
+
+    return {
+        semanasAtivas,
+        fatorMeta: semanasAtivas / 4,
+        motivo: dados.motivo || "",
+        observacao: dados.observacao || "",
+        avaliado: semanasAtivas > 0
+    };
+}
+
+function processarFuncionario(funcionario, opcoes = {}) {
     const kpis = obterKpisFuncionario(funcionario);
     const totalPrincipal = somarObjeto(kpis.principais);
     const totalExtra = somarObjeto(kpis.extras);
     const jornada = identificarJornada(funcionario.nome || "");
+    const id = chaveFuncionario(funcionario);
+    const avaliacaoMeta = opcoes.ignorarAvaliacaoMeta
+        ? { semanasAtivas: 4, fatorMeta: 1, motivo: "", observacao: "", avaliado: true }
+        : obterAvaliacaoMetaFuncionario(id);
 
     return {
-        id: chaveFuncionario(funcionario),
+        id,
         nome: funcionario.nome || "Sem nome",
         email: funcionario.email || "",
         celula: funcionario.celula || "Sem célula",
         jornada,
+        avaliacaoMeta,
         principais: kpis.principais,
         extras: kpis.extras,
         metas: {},
@@ -74,11 +95,12 @@ function aplicarMetasEDesempenho(funcionarios, metasPorCelula) {
         const metasFuncionario = {};
         const desempenho = {};
         let metaTotal = 0;
+        const fatorParticipacao = Number(funcionario.avaliacaoMeta?.fatorMeta ?? 1);
 
         Object.keys(funcionario.principais).forEach(kpi => {
             const metaCelulaKpi = metasPorCelula[funcionario.celula]?.[kpi];
             const metaIndividual8h = obterMetaIndividual(metaCelulaKpi);
-            const metaIndividual = metaIndividual8h * funcionario.jornada.fatorMeta;
+            const metaIndividual = metaIndividual8h * funcionario.jornada.fatorMeta * fatorParticipacao;
 
             metasFuncionario[kpi] = Math.round(metaIndividual);
             desempenho[kpi] = percentual(funcionario.principais[kpi], metaIndividual);
@@ -96,23 +118,27 @@ function aplicarMetasEDesempenho(funcionarios, metasPorCelula) {
 }
 
 function processarProducao(linhasPadronizadas) {
+    dadosProducao.linhasOriginais = linhasPadronizadas;
+
     const funcionariosProcessados = linhasPadronizadas
         .filter(funcionario => funcionario.nome || funcionario.email)
         .map(processarFuncionario);
 
-    const metas = calcularMetasPorCelula(funcionariosProcessados, dadosProducao.historico, dadosProducao.competencia);
+    const funcionariosAvaliaveis = funcionariosProcessados.filter(funcionario => funcionario.avaliacaoMeta?.avaliado !== false);
+    const metas = calcularMetasPorCelula(funcionariosAvaliaveis, dadosProducao.historico, dadosProducao.competencia);
     const funcionariosComMetas = aplicarMetasEDesempenho(funcionariosProcessados, metas);
-    const rankings = calcularRankings(funcionariosComMetas);
-    const celulas = new Set(funcionariosComMetas.map(funcionario => funcionario.celula));
+    const funcionariosAvaliados = funcionariosComMetas.filter(funcionario => funcionario.avaliacaoMeta?.avaliado !== false);
+    const rankings = calcularRankings(funcionariosAvaliados);
+    const celulas = new Set(funcionariosAvaliados.map(funcionario => funcionario.celula));
 
     dadosProducao.funcionarios = funcionariosComMetas;
     dadosProducao.metas = metas;
     dadosProducao.rankings = rankings;
-    dadosProducao.dashboard.totalFuncionarios = funcionariosComMetas.length;
-    dadosProducao.dashboard.totalPrincipal = funcionariosComMetas.reduce((total, f) => total + f.totalPrincipal, 0);
-    dadosProducao.dashboard.totalExtra = funcionariosComMetas.reduce((total, f) => total + f.totalExtra, 0);
+    dadosProducao.dashboard.totalFuncionarios = funcionariosAvaliados.length;
+    dadosProducao.dashboard.totalPrincipal = funcionariosAvaliados.reduce((total, f) => total + f.totalPrincipal, 0);
+    dadosProducao.dashboard.totalExtra = funcionariosAvaliados.reduce((total, f) => total + f.totalExtra, 0);
     dadosProducao.dashboard.totalCelulas = celulas.size;
-    dadosProducao.dashboard.totaisKpis = calcularTotaisPorKpi(linhasPadronizadas);
+    dadosProducao.dashboard.totaisKpis = calcularTotaisPorKpi(funcionariosAvaliados);
 
     return dadosProducao;
 }

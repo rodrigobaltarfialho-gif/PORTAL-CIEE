@@ -2,7 +2,7 @@
 
 ## Módulo principal: Produção
 
-A produção será organizada por célula, funcionário, mês e KPI.
+A produção será organizada por célula, funcionário, mês e atividade.
 
 ---
 
@@ -35,7 +35,7 @@ Campos:
 - ano
 - competencia
 
-KPIs:
+Atividades:
 
 - contratosMarcados
 - prorrogacoes
@@ -50,18 +50,18 @@ KPIs:
 
 ## Coleção: regras_metas
 
-Define quais KPIs contam como meta para cada célula.
+Define quais atividades contam como meta para cada célula.
 
 ### Desligamento
 
-KPIs principais:
+Atividades principais:
 
 - contratosDesligados
 - ticketsResolvidos
 
 ### Aprendiz Personalizado
 
-KPIs principais:
+Atividades principais:
 
 - contratosMarcados
 - prorrogacoes
@@ -70,7 +70,7 @@ KPIs principais:
 
 ### GMC Personalizado
 
-KPIs principais:
+Atividades principais:
 
 - prorrogacoes
 - contratosDesligados
@@ -78,7 +78,7 @@ KPIs principais:
 
 ### GMC Expúblicas
 
-KPIs principais:
+Atividades principais:
 
 - prorrogacoes
 - contratosDesligados
@@ -86,7 +86,7 @@ KPIs principais:
 
 ### Personalizado Estágio
 
-KPIs principais:
+Atividades principais:
 
 - contratosMarcados
 - prorrogacoes
@@ -95,13 +95,13 @@ KPIs principais:
 
 ### Regularização de Contrato
 
-KPIs principais:
+Atividades principais:
 
 - ticketsResolvidos
 
 ### Postos
 
-KPIs principais:
+Atividades principais:
 
 - contratosMarcados
 - prorrogacoes
@@ -110,7 +110,7 @@ KPIs principais:
 
 ### Desligamento Aprendiz
 
-KPIs principais:
+Atividades principais:
 
 - contratosDesligados
 - ticketsResolvidos
@@ -119,30 +119,30 @@ KPIs principais:
 
 ## Regra de cálculo da meta
 
-As metas são calculadas separadamente para cada KPI principal da célula.
+As metas são calculadas separadamente para cada atividade principal da célula.
 
 Não existe uma única meta geral da célula.
 
 A meta será calculada por:
 
 - célula
-- KPI
+- Atividade
 - competência
 
 Fórmula:
 
-Meta do KPI = média dos últimos 5 meses da célula para aquele KPI + 10%
+Meta da atividade = média dos últimos 5 meses da célula para aquela atividade + 10%
 
 Exemplo:
 
 Célula: Aprendiz Personalizado  
-KPI: contratosMarcados  
+Atividade: contratosMarcados  
 
 Média dos últimos 5 meses: 100  
 Acréscimo: 10%  
 Meta final: 110  
 
-Cada KPI terá:
+Cada atividade terá:
 
 - média dos últimos 5 meses
 - acréscimo de 10%
@@ -174,17 +174,17 @@ Calculado por percentual de cumprimento da meta.
 
 ### Ranking de produção extra
 
-Calculado com base nas produções que não entram como KPI principal.
+Calculado com base nas produções que não entram como atividade principal.
 
 ## Coleção: calculo_metas
 
-Guarda o cálculo detalhado das metas por competência, célula e KPI.
+Guarda o cálculo detalhado das metas por competência, célula e atividade.
 
 Campos:
 
 - competencia
 - celula
-- kpi
+- atividade
 - mediaUltimos5Meses
 - percentualAcrescimo
 - metaFinal
@@ -197,7 +197,7 @@ Campos:
 
 Competência: 2026-07  
 Célula: Aprendiz Personalizado  
-KPI: contratosMarcados  
+Atividade: contratosMarcados  
 
 Média dos últimos 5 meses: 100  
 Percentual de acréscimo: 10%  
@@ -254,7 +254,7 @@ Motor da Produção
 
         ├── Calcular Produção Extra
 
-        ├── Calcular KPIs
+        ├── Calcular atividades
 
         └── Gerar Indicadores
 
@@ -305,13 +305,13 @@ Aprendiz Personalizado
 
 ↓
 
-Buscar automaticamente quais KPIs pertencem àquela célula.
+Buscar automaticamente quais atividades pertencem àquela célula.
 
 O sistema utilizará:
 
 regras-producao.js
 
-para descobrir os KPIs válidos.
+para descobrir as atividades válidas.
 
 ---
 
@@ -341,7 +341,7 @@ producao_mensal
 
 Buscar automaticamente os últimos 5 meses da mesma célula.
 
-Calcular a média de cada KPI.
+Calcular a média de cada atividade.
 
 Exemplo:
 
@@ -403,7 +403,7 @@ competencia
 
 celula
 
-kpi
+atividade
 
 mediaUltimos5Meses
 
@@ -445,7 +445,7 @@ Ranking da Célula
 
 Volume bruto
 
-dos KPIs principais.
+das atividades principais.
 
 Ranking Geral
 
@@ -457,7 +457,7 @@ Ranking Produção Extra
 
 ↓
 
-Produções que não fazem parte dos KPIs principais.
+Produções que não fazem parte das atividades principais.
 
 ---
 

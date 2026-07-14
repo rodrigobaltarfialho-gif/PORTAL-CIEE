@@ -16,7 +16,7 @@
             </div>
 
             <nav>
-                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Menu</a>
                 <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
                 <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
                 <a class="active" href="./index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
@@ -32,7 +32,7 @@
                 <div>
                     <span class="eyebrow">Módulo de Produção</span>
                     <h1>Produção</h1>
-                    <p>Gestão da produtividade, metas por KPI e ranking da equipe.</p>
+                    <p>Gestão da produtividade, metas por atividade e ranking da equipe.</p>
                 </div>
             </header>
 
@@ -114,7 +114,7 @@
                 <article class="dashboard metas-panel">
                     <div class="section-heading">
                         <div>
-                            <h2>Metas por célula e KPI</h2>
+                            <h2>METAS POR CÉLULA E ATIVIDADE</h2>
                             <p>As metas ficam agrupadas por célula para facilitar a leitura da operação.</p>
                         </div>
                     </div>
@@ -146,18 +146,22 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="ranking-secondary">
-                        <div class="ranking-secondary-heading">
-                            <h3>Destaques por KPI</h3>
-                            <span>Melhor percentual individual em um KPI da célula</span>
+                </article>
+
+                <article class="dashboard ranking-card ranking-secondary-card">
+                    <div class="section-heading">
+                        <div>
+                            <h2>Destaques por atividade</h2>
+                            <p>Melhor percentual individual em uma atividade da célula.</p>
                         </div>
-                        <div class="table-wrap">
+                    </div>
+                    <div class="table-wrap ranking-main-wrap">
                             <table class="ranking-table ranking-kpi-table">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Funcionário</th>
-                                        <th>KPI</th>
+                                        <th>Atividade</th>
                                         <th>%</th>
                                     </tr>
                                 </thead>
@@ -166,15 +170,27 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
                 </article>
             </section>
 
             <section class="dashboard">
                 <div class="section-heading">
                     <div>
-                        <h2>Produção por pessoa e célula</h2>
+                        <h2>PRODUÇÃO POR COLABORADOR E CÉLULA</h2>
                         <p>Meta individual padrão em 8h. Para nomes com “(estagiária)” ou “(estagiário)”, a meta é proporcional a 6h.</p>
+                    </div>
+                    <div class="filter-box people-priority-filters">
+                        <div class="multi-filter" id="priorizarCelulaPessoas">
+                            <span>Células no topo</span>
+                            <button type="button" class="multi-filter-button">Todas</button>
+                            <div class="multi-filter-menu"></div>
+                        </div>
+                        <div class="multi-filter" id="priorizarFuncionarioPessoas">
+                            <span>Colaboradores no topo</span>
+                            <button type="button" class="multi-filter-button">Todos</button>
+                            <div class="multi-filter-menu"></div>
+                        </div>
+                        <button type="button" class="secondary-button" id="limparPrioridadePessoas">Limpar destaque</button>
                     </div>
                 </div>
                 <div id="analisePessoasCelula" class="people-cell-grid">

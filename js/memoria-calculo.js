@@ -12,9 +12,9 @@
 
     const formulas = [
         {
-            titulo: "Meta por KPI",
+            titulo: "Meta por atividade",
             formula: "média histórica x (1 + percentual de acréscimo)",
-            detalhe: "O percentual padrão é 10%. Pode ser alterado por célula, KPI e competência."
+            detalhe: "O percentual padrão é 10%. Pode ser alterado por célula, atividade e competência."
         },
         {
             titulo: "Média histórica",
@@ -33,7 +33,7 @@
         },
         {
             titulo: "Meta individual",
-            formula: "meta final da célula/KPI / quantidade de pessoas do KPI",
+            formula: "meta final da célula/atividade / quantidade de pessoas da atividade",
             detalhe: "Depois aplica o fator de jornada: 1,00 para 8h e 0,75 para 6h."
         },
         {
@@ -43,30 +43,30 @@
         },
         {
             titulo: "Índice de esforço",
-            formula: "soma de cada KPI x peso configurado",
-            detalhe: "É a base do velocímetro de força de trabalho."
+            formula: "soma de cada atividade x peso configurado",
+            detalhe: "Converte volume produzido em esforço equivalente. Uma atividade simples não pesa igual a uma atividade mais complexa."
         },
         {
             titulo: "Pressão operacional",
             formula: "índice de esforço atual / limite sustentável x 100",
-            detalhe: "O limite sustentável usa a faixa alta da equipe ajustada para jornada de 8h."
+            detalhe: "Compara o esforço produzido com a capacidade sustentável estimada. Ao incluir novas atividades, a régua de capacidade também fica mais completa."
         }
     ];
 
     const componentes = [
         {
             tipo: "Card",
-            titulo: "Cards de produção por KPI",
+            titulo: "Cards de produção por atividade",
             onde: "Tela Produção, topo do dashboard",
-            mede: "Total produzido em cada KPI reconhecido na competência selecionada.",
-            conta: "Soma direta do KPI em todas as linhas importadas da competência.",
+            mede: "Total produzido em cada atividade reconhecida na competência selecionada.",
+            conta: "Soma direta da atividade em todas as linhas importadas da competência.",
             leitura: "Serve para enxergar volume bruto por atividade antes da comparação com meta."
         },
         {
             tipo: "Card",
-            titulo: "Metas por célula e KPI",
+            titulo: "Metas por célula e atividade",
             onde: "Tela Produção, painel de metas",
-            mede: "Produção, meta e percentual médio de cada célula por KPI principal.",
+            mede: "Produção, meta e percentual médio de cada célula por atividade principal.",
             conta: "Percentual = produção realizada da célula / meta final da célula x 100.",
             leitura: "Mostra quais células estão próximas, acima ou distantes da meta esperada."
         },
@@ -80,10 +80,10 @@
         },
         {
             tipo: "Tabela",
-            titulo: "Destaques por KPI",
+            titulo: "Destaques por atividade",
             onde: "Tela Produção, abaixo do ranking geral",
-            mede: "Melhores percentuais individuais dentro de um KPI da célula.",
-            conta: "Percentual do KPI = produção individual no KPI / meta individual daquele KPI x 100.",
+            mede: "Melhores percentuais individuais dentro de uma atividade da célula.",
+            conta: "Percentual da atividade = produção individual na atividade / meta individual daquela atividade x 100.",
             leitura: "Ajuda a identificar especialistas ou picos de performance por atividade."
         },
         {
@@ -100,7 +100,7 @@
             onde: "Tela Produção, bloco Força de trabalho",
             mede: "Pressão operacional da equipe em relação a uma faixa sustentável de esforço.",
             conta: "Pressão = índice de esforço atual / limite sustentável x 100.",
-            leitura: "Verde indica baixa pressão, amarelo indica pressão controlada/moderada e vermelho indica alta pressão."
+            leitura: "Verde indica baixa pressão, amarelo indica pressão controlada/moderada e vermelho indica alta pressão. O ponteiro não mede quantidade bruta de atividades; mede esforço proporcional à capacidade estimada."
         },
         {
             tipo: "Gráfico",
@@ -108,22 +108,22 @@
             onde: "Tela Produção, bloco Força de trabalho",
             mede: "Ocupação ponderada de cada célula em relação ao próprio limite sustentável.",
             conta: "Ocupação da célula = esforço ponderado da célula / limite sustentável da célula x 100.",
-            leitura: "Mostra onde a demanda está concentrada e quais células têm menor folga operacional."
+            leitura: "Mostra onde a demanda está concentrada e quais células têm menor folga operacional. Atividades não principais também entram no esforço quando consomem tempo da equipe."
         },
         {
             tipo: "Card",
             titulo: "Composição de esforço",
             onde: "Tela Produção, bloco Força de trabalho",
-            mede: "Participação de cada KPI no total de pontos de esforço.",
-            conta: "Pontos do KPI = quantidade produzida x peso configurado do KPI.",
-            leitura: "Evita comparar atividades diferentes como se tivessem o mesmo esforço."
+            mede: "Participação de cada atividade no total de pontos de esforço.",
+            conta: "Pontos da atividade = quantidade produzida x peso configurado da atividade.",
+            leitura: "Evita comparar atividades diferentes como se tivessem o mesmo esforço. Por isso, incluir mais atividades não aumenta automaticamente a pressão: depende do peso e da capacidade de referência."
         },
         {
             tipo: "Tabela",
             titulo: "Produção por pessoa e célula",
             onde: "Tela Produção, detalhamento individual",
             mede: "Produção, meta individual, percentual e comentários por colaborador.",
-            conta: "Meta individual = meta da célula/KPI dividida pelos colaboradores do KPI, ajustada pela jornada.",
+            conta: "Meta individual = meta da célula/atividade dividida pelos colaboradores da atividade, ajustada pela jornada.",
             leitura: "Permite justificar desvios com comentários, férias, apoio em outra demanda ou dedicação parcial."
         },
         {
@@ -186,7 +186,7 @@
                 <tr>
                     <td><strong>${escaparHtml(celula)}</strong></td>
                     <td>${kpis.map(kpi => `<span class="calc-chip">${escaparHtml(nomeKpi(kpi))}</span>`).join("")}</td>
-                    <td>Produção principal da célula; demais KPIs entram como produção extra.</td>
+                    <td>Produção principal da célula; demais atividades entram como produção extra.</td>
                 </tr>
             `).join("");
     }

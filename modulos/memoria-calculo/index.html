@@ -16,7 +16,7 @@
             </div>
 
             <nav>
-                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Menu</a>
                 <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
                 <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
                 <a href="../producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
@@ -32,19 +32,19 @@
                 <div>
                     <span class="eyebrow">Governança dos indicadores</span>
                     <h1>Memória de cálculo</h1>
-                    <p>Regras, fórmulas e parâmetros usados nos KPIs, metas, rankings, prévia mensal e força de trabalho.</p>
+                    <p>Regras, fórmulas e parâmetros usados nas atividades, metas, rankings, prévia mensal e força de trabalho.</p>
                 </div>
             </header>
 
             <section class="dashboard calculation-hero">
                 <div>
                     <h2>Como a meta do próximo mês é formada</h2>
-                    <p>A prévia pega a competência vigente mais recente, copia a lista de colaboradores e zera todos os KPIs. Em seguida, calcula a meta da nova competência usando o histórico anterior disponível.</p>
+                    <p>A prévia pega a competência vigente mais recente, copia a lista de colaboradores e zera todas as atividades. Em seguida, calcula a meta da nova competência usando o histórico anterior disponível.</p>
                 </div>
                 <div class="formula-card">
                     <span>Regra base</span>
                     <strong>Meta = média histórica x (1 + percentual)</strong>
-                    <p>Percentual padrão: 10%, salvo configuração manual por célula/KPI.</p>
+                    <p>Percentual padrão: 10%, salvo configuração manual por célula/atividade.</p>
                 </div>
             </section>
 
@@ -59,7 +59,7 @@
                     <div class="method-box">
                         <p><strong>1.</strong> Localiza a competência mais recente salva no Firebase.</p>
                         <p><strong>2.</strong> Cria a próxima competência. Exemplo: se a vigente for junho/2026, a prévia será julho/2026.</p>
-                        <p><strong>3.</strong> Copia os colaboradores da competência vigente e zera os KPIs.</p>
+                        <p><strong>3.</strong> Copia os colaboradores da competência vigente e zera as atividades.</p>
                         <p><strong>4.</strong> Busca histórico anterior à prévia, limitado ao mesmo ano, para calcular as metas.</p>
                         <p><strong>5.</strong> Se só houver 2 bases, a média será feita com essas 2 bases. O nome “últimos 5 meses” é o teto máximo da amostra, não uma exigência mínima.</p>
                     </div>
@@ -71,14 +71,14 @@
             </section>
 
             <section class="dashboard">
-                <h2>KPIs por célula</h2>
+                <h2>Atividades por célula</h2>
                 <p class="muted">Essas são as regras padrão. Se houver alteração salva em “Importar dados”, a configuração da competência substitui essa tabela a partir do mês configurado.</p>
                 <div class="table-scroll">
                     <table class="ranking-table calculation-table">
                         <thead>
                             <tr>
                                 <th>Célula</th>
-                                <th>KPIs principais</th>
+                                <th>Atividades principais</th>
                                 <th>Como entra na meta</th>
                             </tr>
                         </thead>
@@ -99,7 +99,7 @@
                     <div class="method-box">
                         <p><strong>Colaborador CLT:</strong> carga 8 horas, fator 1,00.</p>
                         <p><strong>Estagiário:</strong> identificado quando o nome contém “(estagiária)” ou “(estagiário)”. Carga 6 horas, fator 0,75.</p>
-                        <p><strong>Meta individual:</strong> meta da célula/KPI dividida pela quantidade de pessoas que possuem aquele KPI.</p>
+                        <p><strong>Meta individual:</strong> meta da célula/atividade dividida pela quantidade de pessoas que possuem aquela atividade.</p>
                         <p><strong>Meta do estagiário:</strong> meta individual de 8h x 0,75.</p>
                     </div>
                 </article>
@@ -107,10 +107,10 @@
                 <article class="dashboard">
                     <h2>Fontes possíveis da meta</h2>
                     <div class="source-list">
-                        <div><strong>Histórico da célula</strong><span>Média das últimas competências anteriores da mesma célula/KPI.</span></div>
-                        <div><strong>Referência geral do KPI</strong><span>Usada quando a célula ainda não tem histórico daquele KPI.</span></div>
+                        <div><strong>Histórico da célula</strong><span>Média das últimas competências anteriores da mesma célula/atividade.</span></div>
+                        <div><strong>Referência geral da atividade</strong><span>Usada quando a célula ainda não tem histórico daquela atividade.</span></div>
                         <div><strong>Piso estatístico</strong><span>Evita metas muito baixas; usa 70% da mediana individual equivalente a 8h.</span></div>
-                        <div><strong>Meta manual</strong><span>Quando preenchida, substitui a fórmula daquela célula/KPI/competência.</span></div>
+                        <div><strong>Meta manual</strong><span>Quando preenchida, substitui a fórmula daquela célula/atividade/competência.</span></div>
                     </div>
                 </article>
             </section>
@@ -118,11 +118,18 @@
             <section class="dashboard">
                 <h2>Pesos do velocímetro</h2>
                 <p class="muted">O velocímetro não soma atividades “frias”. Ele converte atividades em pontos ponderados de esforço.</p>
+                <div class="method-box effort-explanation">
+                    <p><strong>Como interpretar:</strong> o índice de pressão não mede apenas quantas atividades foram produzidas. Ele tenta estimar quanto tempo e esforço essas atividades representam para a equipe.</p>
+                    <p><strong>Volume bruto x esforço:</strong> duas atividades podem ter a mesma quantidade, mas não necessariamente o mesmo peso operacional. Por isso, cada atividade recebe um peso e vira uma quantidade de pontos de esforço.</p>
+                    <p><strong>Atividades não principais:</strong> quando elas entram no cálculo, o sistema reconhece que a equipe também gastou tempo nelas. Ao mesmo tempo, a referência de capacidade fica mais completa, porque a análise deixa de olhar apenas para as atividades principais da célula.</p>
+                    <p><strong>Por que a pressão pode diminuir:</strong> se as novas atividades tiverem peso menor ou ajudarem a mostrar melhor a distribuição real do trabalho, a porcentagem pode cair. Isso não significa menos trabalho; significa que a régua ficou mais proporcional ao esforço total e à capacidade sustentável.</p>
+                    <p><strong>Leitura correta:</strong> o objetivo é medir pressão operacional, não premiar soma bruta. Assim, uma célula pode ter muito volume e ainda aparecer controlada se o esforço estiver compatível com a capacidade estimada.</p>
+                </div>
                 <div class="table-scroll">
                     <table class="ranking-table calculation-table">
                         <thead>
                             <tr>
-                                <th>KPI</th>
+                                <th>Atividade</th>
                                 <th>Peso padrão</th>
                                 <th>Conta</th>
                             </tr>

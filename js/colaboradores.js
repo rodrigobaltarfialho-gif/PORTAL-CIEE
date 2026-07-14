@@ -1,4 +1,4 @@
-(async function iniciarColaboradores() {
+﻿(async function iniciarColaboradores() {
     const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js");
     const firestore = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
 
@@ -70,6 +70,20 @@
         }
 
         return `${partes[0][0] || ""}${partes.length > 1 ? partes[partes.length - 1][0] : ""}`.toUpperCase();
+    }
+
+    function nomeCurto(nome) {
+        const partes = String(nome || "")
+            .replace(/\([^)]*\)/g, "")
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+        if (partes.length <= 2) {
+            return partes.join(" ") || "Sem nome";
+        }
+
+        return `${partes[0]} ${partes[partes.length - 1]}`;
     }
 
     window.trocarFotoColaborador = function trocarFotoColaborador(img) {
@@ -194,6 +208,7 @@
             meta: funcionario.metaTotal,
             percentual: funcionario.percentualGeral,
             principais: funcionario.principais,
+            extras: funcionario.extras,
             metas: funcionario.metas,
             desempenho: funcionario.desempenho
         });
@@ -403,6 +418,74 @@
         };
     }
 
+    function obterPodiosPorAtividade() {
+        const competencia = estado.competencias[estado.competencias.length - 1];
+        const atividades = [
+            {
+                chave: "contratosMarcados",
+                titulo: "Contratações",
+                descricao: "Quem mais marcou contratos na competência.",
+                unidade: "contratos"
+            },
+            {
+                chave: "prorrogacoes",
+                titulo: "Prorrogações",
+                descricao: "Quem mais realizou prorrogações na competência.",
+                unidade: "prorrogações"
+            },
+            {
+                chave: "ticketsResolvidos",
+                titulo: "Tickets resolvidos",
+                descricao: "Quem mais respondeu tickets na competência.",
+                unidade: "tickets"
+            }
+        ];
+
+        return atividades.map(atividade => {
+            const destaques = [...estado.colaboradores.values()]
+                .map(colaborador => {
+                    const mes = colaborador.meses.find(item => item.competencia === competencia);
+                    const valor = Number(mes?.principais?.[atividade.chave] || 0) + Number(mes?.extras?.[atividade.chave] || 0);
+
+                    if (!mes || valor <= 0) {
+                        return null;
+                    }
+
+                    return {
+                        nome: colaborador.nome,
+                        celula: colaborador.celula,
+                        valor,
+                        unidade: atividade.unidade
+                    };
+                })
+                .filter(Boolean)
+                .sort((a, b) => b.valor - a.valor)
+                .slice(0, 3);
+
+            return {
+                ...atividade,
+                competencia,
+                destaques
+            };
+        });
+    }
+
+    function renderizarSeloPodio(posicao) {
+        if (posicao === 1) {
+            return `
+                <span class="podium-leader-icons" aria-label="1º lugar">
+                    <img class="podium-rank-img" src="../../assets/icones/primeiro.png" alt="1º">
+                    <img class="podium-trophy-img" src="../../assets/icones/trofeu.png" alt="">
+                </span>
+            `;
+        }
+
+        const medalha = posicao === 2 ? "medalha-de-prata.png" : "medalha-de-bronze.png";
+        const alt = posicao === 2 ? "2º lugar" : "3º lugar";
+
+        return `<img class="podium-rank-img" src="../../assets/icones/${medalha}" alt="${alt}">`;
+    }
+
     function renderizarPodio(titulo, descricao, destaques, tipo) {
         if (!destaques.length) {
             return `
@@ -429,14 +512,9 @@
                 const detalhe = tipo === "evolucao"
                     ? `${formatarNumero(destaque.percentualAnterior)}% para ${formatarNumero(destaque.percentualAtual)}%`
                     : `${formatarNumero(destaque.producao)} de ${formatarNumero(destaque.meta)} pontos`;
-
-                const seloPosicao = posicao === 1
-                    ? `<span class="podium-trophy" aria-label="Troféu">&#127942;</span><span class="podium-rank gold">1º</span>`
-                    : `<span class="podium-medal ${posicao === 2 ? "silver" : "bronze"}" aria-label="${posicao}º lugar">${posicao}</span>`;
-
-                return `
+return `
                     <article class="podium-place ${classes[indice]} ${tipo === "evolucao" ? "growth" : ""}" style="--delay:${indice * 90}ms">
-                        ${seloPosicao}
+                        ${renderizarSeloPodio(posicao)}
                         ${avatarDestaque(destaque.nome)}
                         <strong>${escaparHtml(destaque.nome)}</strong>
                         <small>${escaparHtml(destaque.celula || "-")}</small>
@@ -454,6 +532,67 @@
                     <p>${escaparHtml(descricao)}</p>
                 </div>
                 <div class="podium-board">${cards}</div>
+            </section>
+        `;
+    }
+
+    function renderizarPodioAtividade(atividade) {
+        if (!atividade.destaques.length) {
+            return "";
+        }
+
+        const classes = ["first", "second", "third"];
+        const ordemVisual = atividade.destaques.length > 1 ? [1, 0, 2] : [0];
+        const cards = ordemVisual
+            .filter(indice => atividade.destaques[indice])
+            .map(indice => {
+                const destaque = atividade.destaques[indice];
+                const posicao = indice + 1;
+return `
+                    <article class="podium-place activity ${classes[indice]}" style="--delay:${indice * 90}ms">
+                        ${renderizarSeloPodio(posicao)}
+                        ${avatarDestaque(destaque.nome)}
+                        <strong title="${escaparHtml(destaque.nome)}">${escaparHtml(nomeCurto(destaque.nome))}</strong>
+                        <small>${escaparHtml(destaque.celula || "-")}</small>
+                        <div class="podium-score">${formatarNumero(destaque.valor)}</div>
+                        <p>${escaparHtml(destaque.unidade)}</p>
+                    </article>
+                `;
+            })
+            .join("");
+
+        return `
+            <article class="activity-podium-card">
+                <div class="highlight-panel-heading">
+                    <div>
+                        <h4>${escaparHtml(atividade.titulo)}</h4>
+                        <p>${escaparHtml(atividade.descricao)}</p>
+                    </div>
+                </div>
+                <div class="podium-board compact">${cards}</div>
+            </article>
+        `;
+    }
+
+    function renderizarPodiosAtividades() {
+        const podios = obterPodiosPorAtividade()
+            .map(renderizarPodioAtividade)
+            .filter(Boolean)
+            .join("");
+
+        if (!podios) {
+            return "";
+        }
+
+        return `
+            <section class="highlight-panel activity-podium-section">
+                <div class="highlight-panel-heading">
+                    <div>
+                        <h3>Pódio por atividade</h3>
+                        <p>Top 3 por número absoluto na última competência publicada.</p>
+                    </div>
+                </div>
+                <div class="activity-podium-grid">${podios}</div>
             </section>
         `;
     }
@@ -503,6 +642,7 @@
         mural.innerHTML = `
             ${renderizarPodio("Pódio da competência", `Melhores percentuais em ${labelCompetencia(competencia)}.`, destaques, "meta")}
             ${renderizarPodio("Pódio de evolução", evolucoes.competenciaAnterior ? `Maiores crescimentos de ${labelCompetencia(evolucoes.competenciaAnterior)} para ${labelCompetencia(evolucoes.competenciaAtual)}.` : "Maiores crescimentos de um mês para o outro.", evolucoes.destaques, "evolucao")}
+            ${renderizarPodiosAtividades()}
             <section class="highlight-extras">
                 ${renderizarCardExtra("Maior produção", extras.maiorProducao, "producao")}
                 ${renderizarCardExtra("Maior constância", extras.maisConstante, "constancia")}

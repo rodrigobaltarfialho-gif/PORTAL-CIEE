@@ -16,7 +16,7 @@
             </div>
 
             <nav>
-                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Home</a>
+                <a href="../../index.html"><span class="nav-icon nav-icon-dashboard" aria-hidden="true"></span>Menu</a>
                 <a href="../sazonalidade/index.html"><span class="nav-icon nav-icon-season" aria-hidden="true"></span>Sazonalidade</a>
                 <a href="../desligamentos/index.html"><span class="nav-icon nav-icon-exit" aria-hidden="true"></span>Desligamentos</a>
                 <a href="../producao/index.html"><span class="nav-icon nav-icon-production" aria-hidden="true"></span>Produção</a>
@@ -64,13 +64,13 @@
                 <div class="section-heading">
                     <div>
                         <h2>Parâmetros da competência</h2>
-                        <p>Ajuste metas por célula/KPI e pesos do velocímetro antes ou depois de atualizar a base.</p>
+                        <p>Ajuste metas por célula/atividade e pesos do velocímetro antes ou depois de atualizar a base.</p>
                     </div>
                 </div>
 
                 <div class="parameters-grid">
                     <article class="parameter-card">
-                        <h3>Metas por célula e KPI</h3>
+                        <h3>Metas por célula e atividade</h3>
                         <div class="parameter-form">
                             <label>
                                 <span>Competência</span>
@@ -83,7 +83,7 @@
                                 </select>
                             </label>
                             <label>
-                                <span>KPI</span>
+                                <span>Atividade</span>
                                 <select id="parametroMetaKpi"></select>
                             </label>
                             <label>
@@ -94,7 +94,7 @@
                                 <span>Meta manual</span>
                                 <input type="number" id="parametroMetaManual" min="0" step="1" placeholder="Opcional: substitui a fórmula">
                             </label>
-                            <p class="parameter-help parameter-form-wide">Meta manual é um número fechado para substituir a fórmula daquela célula/KPI na competência. Se ficar vazio, o sistema usa percentual, histórico e piso estatístico.</p>
+                            <p class="parameter-help parameter-form-wide">Meta manual é um número fechado para substituir a fórmula daquela célula/atividade na competência. Se ficar vazio, o sistema usa percentual, histórico e piso estatístico.</p>
                             <label class="parameter-form-wide">
                                 <span>Observação</span>
                                 <input type="text" id="parametroMetaObservacao" placeholder="Motivo do ajuste">
@@ -116,7 +116,7 @@
                     </article>
 
                     <article class="parameter-card parameter-card-wide">
-                        <h3>KPIs ativos por célula</h3>
+                        <h3>Atividades ativas por célula</h3>
                         <div class="parameter-form">
                             <label>
                                 <span>Competência</span>
@@ -128,12 +128,12 @@
                                     <option value="">Carregando células...</option>
                                 </select>
                             </label>
-                            <p class="parameter-help">Escolha quais KPIs entram na meta da célula nessa competência. Se não configurar nada no mês seguinte, continua usando a última configuração salva.</p>
+                            <p class="parameter-help">Escolha quais atividades entram na meta da célula nessa competência. Se não configurar nada no mês seguinte, continua usando a última configuração salva.</p>
                         </div>
                         <div id="parametrosKpisCelula" class="parameter-checkbox-list"></div>
                         <div class="parameter-actions">
-                            <button type="button" onclick="salvarParametrosKpisCelula()">Salvar KPIs da célula</button>
-                            <button type="button" class="secondary-button" onclick="voltarKpisCelulaPadrao()">Voltar KPIs ao padrão</button>
+                            <button type="button" onclick="salvarParametrosKpisCelula()">Salvar atividades da célula</button>
+                            <button type="button" class="secondary-button" onclick="voltarKpisCelulaPadrao()">Voltar atividades ao padrão</button>
                         </div>
                     </article>
                 </div>

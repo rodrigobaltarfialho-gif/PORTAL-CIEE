@@ -40,7 +40,7 @@ function contarFuncionariosPorKpi(metasPorCelula, funcionarios) {
         Object.keys(metasPorCelula[celula]).forEach(kpi => {
             metasPorCelula[celula][kpi].quantidadeFuncionarios = funcionarios
                 .filter(funcionario => funcionario.celula === celula && kpi in funcionario.principais)
-                .length;
+                .reduce((total, funcionario) => total + Number(funcionario.avaliacaoMeta?.fatorMeta ?? 1), 0);
         });
     });
 }
@@ -137,7 +137,8 @@ function calcularPisoMetaIndividual8h(funcionarios, celula, kpi) {
     const producoesEquivalentes8h = funcionarios
         .filter(funcionario => funcionario.celula === celula && kpi in funcionario.principais)
         .map(funcionario => {
-            const fatorJornada = Number(funcionario.jornada?.fatorMeta || 1);
+            const fatorParticipacao = Number(funcionario.avaliacaoMeta?.fatorMeta ?? 1);
+            const fatorJornada = Number(funcionario.jornada?.fatorMeta || 1) * fatorParticipacao;
             const valor = Number(funcionario.principais[kpi] || 0);
 
             return fatorJornada ? valor / fatorJornada : valor;

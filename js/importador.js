@@ -59,7 +59,7 @@ function montarResumoValidacao({ competencia, nomeAba, dadosPadronizados, linhas
     const kpis = kpisReconhecidos(dadosPadronizados);
     const alertas = [
         linhasSemEmail ? `${formatarNumero(linhasSemEmail)} linha(s) sem e-mail. Nesses casos o histórico usa o nome como fallback.` : "",
-        semRegra.length ? `Células sem regra de KPI: ${semRegra.join(", ")}.` : ""
+        semRegra.length ? `Células sem regra de atividade: ${semRegra.join(", ")}.` : ""
     ].filter(Boolean);
 
     if (!container) {
@@ -80,7 +80,7 @@ function montarResumoValidacao({ competencia, nomeAba, dadosPadronizados, linhas
             <article><span>Aba lida</span><strong>${escaparHtml(nomeAba)}</strong></article>
             <article><span>Colaboradores</span><strong>${formatarNumero(dadosPadronizados.length)}</strong></article>
             <article><span>Células</span><strong>${formatarNumero(celulas.length)}</strong></article>
-            <article><span>KPIs reconhecidos</span><strong>${formatarNumero(kpis.length)}</strong></article>
+            <article><span>Atividades reconhecidas</span><strong>${formatarNumero(kpis.length)}</strong></article>
             <article><span>Sem e-mail</span><strong>${formatarNumero(linhasSemEmail)}</strong></article>
         </div>
         <div class="import-validation-list">
@@ -88,7 +88,7 @@ function montarResumoValidacao({ competencia, nomeAba, dadosPadronizados, linhas
             <p>${celulas.map(escaparHtml).join(", ") || "-"}</p>
         </div>
         <div class="import-validation-list">
-            <h3>KPIs reconhecidos</h3>
+            <h3>Atividades reconhecidas</h3>
             <p>${kpis.map(kpi => escaparHtml(nomesKpis[kpi] || kpi)).join(", ") || "-"}</p>
         </div>
         ${alertas.length ? `

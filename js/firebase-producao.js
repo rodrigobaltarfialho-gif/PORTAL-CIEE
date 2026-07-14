@@ -29,6 +29,7 @@
     const docAtual = doc(db, "producao", "atual");
     const paginaImportacao = Boolean(document.getElementById("arquivoProducao"));
     const paginaProducao = Boolean(document.getElementById("filtroCompetenciaVisualizada"));
+    const TODAS_ATIVIDADES_PARAMETRO = "__todas_atividades__";
     let competenciaAtualVigente = null;
     let filtroCompetenciaManual = false;
 
@@ -62,6 +63,10 @@
 
     function getComentariosCollection(competencia) {
         return collection(db, "producao_comentarios", competencia, "itens");
+    }
+
+    function getAvaliacoesMetaCollection(competencia) {
+        return collection(db, "producao_avaliacoes_meta", competencia, "itens");
     }
 
     function getParametrosMetasCollection() {
@@ -129,10 +134,22 @@
             return;
         }
 
-        select.innerHTML = Object.keys(nomesKpis)
+        select.innerHTML = `<option value="${TODAS_ATIVIDADES_PARAMETRO}">Todas as atividades da célula</option>` + Object.keys(nomesKpis)
             .map(kpi => `<option value="${kpi}">${nomesKpis[kpi]}</option>`)
             .join("");
         select.dataset.configurado = "1";
+    }
+
+    function atividadesSelecionadasParametroMeta(kpi) {
+        if (kpi === TODAS_ATIVIDADES_PARAMETRO) {
+            return Object.keys(nomesKpis);
+        }
+
+        return kpi ? [kpi] : [];
+    }
+
+    function rotuloAtividadeParametro(kpi) {
+        return kpi === TODAS_ATIVIDADES_PARAMETRO ? "Todas as atividades" : (nomesKpis[kpi] || kpi);
     }
 
     function preencherPesosVelocimetro() {
@@ -365,75 +382,82 @@
         const percentualAcrescimo = Number(document.getElementById("parametroMetaPercentual")?.value || 10);
         const metaManual = Number(document.getElementById("parametroMetaManual")?.value || 0);
         const observacao = document.getElementById("parametroMetaObservacao")?.value?.trim() || "";
+        const atividades = atividadesSelecionadasParametroMeta(kpi);
 
-        if (!competencia || !celula || !kpi) {
-            alert("Informe competência, célula e KPI para salvar a meta.");
+        if (!competencia || !celula || !atividades.length) {
+            alert("Informe competência, célula e atividade para salvar a meta.");
             return;
         }
 
-        const dados = {
-            competencia,
-            celula,
-            kpi,
-            percentualAcrescimo,
-            metaManual,
-            observacao,
-            atualizadoEm: serverTimestamp()
-        };
+        await Promise.all(atividades.map(atividade => {
+            const dados = {
+                competencia,
+                celula,
+                kpi: atividade,
+                percentualAcrescimo,
+                metaManual,
+                observacao,
+                atualizadoEm: serverTimestamp()
+            };
 
-        await setDoc(doc(getParametrosMetasCollection(), chaveParametroMetaFirebase(competencia, celula, kpi)), dados, { merge: true });
+            return setDoc(doc(getParametrosMetasCollection(), chaveParametroMetaFirebase(competencia, celula, atividade)), dados, { merge: true });
+        }));
+
         await registrarHistoricoParametros({
             tipo: "Meta",
             competencia,
-            detalhe: `${celula} / ${nomesKpis[kpi] || kpi}`,
+            detalhe: `${celula} / ${rotuloAtividadeParametro(kpi)}`,
             valorNovo: metaManual > 0 ? `Meta manual ${metaManual}` : `${percentualAcrescimo}%`,
             observacao
         });
         await carregarParametrosProducao(competencia);
-        setStatus("success", "Parâmetro de meta salvo com sucesso.");
+        setStatus("success", atividades.length > 1 ? "Parâmetros de meta salvos para todas as atividades da célula." : "Parâmetro de meta salvo com sucesso.");
     };
 
     window.voltarParametroMetaPadrao = async function voltarParametroMetaPadrao() {
         const competencia = document.getElementById("parametroMetaCompetencia")?.value;
         const celula = document.getElementById("parametroMetaCelula")?.value;
         const kpi = document.getElementById("parametroMetaKpi")?.value;
+        const atividades = atividadesSelecionadasParametroMeta(kpi);
 
-        if (!competencia || !celula || !kpi) {
-            alert("Informe competência, célula e KPI para voltar a meta ao padrão.");
+        if (!competencia || !celula || !atividades.length) {
+            alert("Informe competência, célula e atividade para voltar a meta ao padrão.");
             return;
         }
 
-        const dados = {
-            competencia,
-            celula,
-            kpi,
-            percentualAcrescimo: 10,
-            metaManual: 0,
-            observacao: "Voltou ao padrão",
-            atualizadoEm: serverTimestamp()
-        };
+        await Promise.all(atividades.map(atividade => {
+            const dados = {
+                competencia,
+                celula,
+                kpi: atividade,
+                percentualAcrescimo: 10,
+                metaManual: 0,
+                observacao: "Voltou ao padrão",
+                atualizadoEm: serverTimestamp()
+            };
 
-        await setDoc(doc(getParametrosMetasCollection(), chaveParametroMetaFirebase(competencia, celula, kpi)), dados, { merge: true });
+            return setDoc(doc(getParametrosMetasCollection(), chaveParametroMetaFirebase(competencia, celula, atividade)), dados, { merge: true });
+        }));
+
         await registrarHistoricoParametros({
             tipo: "Meta",
             competencia,
-            detalhe: `${celula} / ${nomesKpis[kpi] || kpi}`,
+            detalhe: `${celula} / ${rotuloAtividadeParametro(kpi)}`,
             valorNovo: "Padrão 10%",
             observacao: "Voltou ao padrão"
         });
 
         const percentual = document.getElementById("parametroMetaPercentual");
         const manual = document.getElementById("parametroMetaManual");
-        const observacao = document.getElementById("parametroMetaObservacao");
+        const observacaoCampo = document.getElementById("parametroMetaObservacao");
 
         if (percentual) percentual.value = 10;
         if (manual) manual.value = "";
-        if (observacao) observacao.value = "";
+        if (observacaoCampo) observacaoCampo.value = "";
 
         await carregarParametrosProducao(competencia);
-        setStatus("success", "Meta selecionada voltou ao padrão de 10%.");
+        setStatus("success", atividades.length > 1 ? "Metas de todas as atividades voltaram ao padrão." : "Meta voltou ao padrão.");
     };
-
     window.salvarParametrosPesos = async function salvarParametrosPesos() {
         const inputs = [...document.querySelectorAll("#parametrosPesosVelocimetro input[data-kpi]")];
         const pesos = {};
@@ -449,7 +473,7 @@
         await registrarHistoricoParametros({
             tipo: "Peso velocímetro",
             competencia: "geral",
-            detalhe: "Pesos por KPI",
+            detalhe: "Pesos por atividade",
             valorNovo: "Pesos atualizados"
         });
         await carregarParametrosProducao();
@@ -466,7 +490,7 @@
         await registrarHistoricoParametros({
             tipo: "Peso velocímetro",
             competencia: "geral",
-            detalhe: "Pesos por KPI",
+            detalhe: "Pesos por atividade",
             valorNovo: "Pesos padrão"
         });
         window.dadosProducao.parametros.pesos = pesos;
@@ -481,7 +505,7 @@
         const kpis = [...document.querySelectorAll("#parametrosKpisCelula input:checked")].map(input => input.value);
 
         if (!competencia || !celula || !kpis.length) {
-            alert("Informe competência, célula e selecione pelo menos um KPI.");
+            alert("Informe competência, célula e selecione pelo menos uma atividade.");
             return;
         }
 
@@ -494,13 +518,13 @@
 
         await setDoc(doc(getParametrosKpisCollection(), chaveParametroKpisFirebase(competencia, celula)), dados, { merge: true });
         await registrarHistoricoParametros({
-            tipo: "KPIs da célula",
+            tipo: "Atividades da célula",
             competencia,
             detalhe: celula,
             valorNovo: kpis.map(kpi => nomesKpis[kpi] || kpi).join(", ")
         });
         await carregarParametrosProducao(competencia);
-        setStatus("success", "KPIs ativos da célula salvos com sucesso.");
+        setStatus("success", "Atividades ativas da célula salvas com sucesso.");
     };
 
     window.voltarKpisCelulaPadrao = async function voltarKpisCelulaPadrao() {
@@ -509,7 +533,7 @@
         const kpis = obterKpisPrincipaisPadrao(celula);
 
         if (!competencia || !celula || !kpis.length) {
-            alert("Informe competência e célula para voltar aos KPIs padrão.");
+            alert("Informe competência e célula para voltar às atividades padrão.");
             return;
         }
 
@@ -520,13 +544,13 @@
             atualizadoEm: serverTimestamp()
         }, { merge: true });
         await registrarHistoricoParametros({
-            tipo: "KPIs da célula",
+            tipo: "Atividades da célula",
             competencia,
             detalhe: celula,
-            valorNovo: "KPIs padrão"
+            valorNovo: "Atividades padrão"
         });
         await carregarParametrosProducao(competencia);
-        setStatus("success", "KPIs da célula voltaram ao padrão.");
+        setStatus("success", "Atividades da célula voltaram ao padrão.");
     };
 
     async function limparChunks(competencia) {
@@ -616,6 +640,32 @@
         return comentarios;
     }
 
+    async function carregarAvaliacoesMeta(competencia) {
+        const avaliacoes = {};
+
+        if (!competencia) {
+            window.dadosProducao.avaliacoesMeta = avaliacoes;
+            return avaliacoes;
+        }
+
+        const snap = await getDocsFromServer(getAvaliacoesMetaCollection(competencia));
+
+        snap.forEach(item => {
+            const data = item.data();
+
+            if (data.funcionarioId) {
+                avaliacoes[data.funcionarioId] = {
+                    semanasAtivas: Number(data.semanasAtivas ?? 4),
+                    motivo: data.motivo || "",
+                    observacao: data.observacao || ""
+                };
+            }
+        });
+
+        window.dadosProducao.avaliacoesMeta = avaliacoes;
+        return avaliacoes;
+    }
+
     window.salvarComentarioProducao = async function salvarComentarioProducao(funcionarioId, comentario) {
         const competencia = window.dadosProducao.competencia;
 
@@ -628,6 +678,26 @@
             competencia,
             funcionarioId,
             comentario: String(comentario || ""),
+            atualizadoEm: serverTimestamp()
+        }, { merge: true });
+    };
+
+    window.salvarAvaliacaoMetaProducao = async function salvarAvaliacaoMetaProducao(funcionarioId, avaliacao) {
+        const competencia = window.dadosProducao.competencia;
+
+        if (!competencia || !funcionarioId) {
+            return;
+        }
+
+        const semanasAtivas = Math.max(0, Math.min(4, Number(avaliacao?.semanasAtivas ?? 4)));
+        const id = slug(funcionarioId) || "sem-id";
+
+        await setDoc(doc(getAvaliacoesMetaCollection(competencia), id), {
+            competencia,
+            funcionarioId,
+            semanasAtivas,
+            motivo: String(avaliacao?.motivo || ""),
+            observacao: String(avaliacao?.observacao || ""),
             atualizadoEm: serverTimestamp()
         }, { merge: true });
     };
@@ -794,6 +864,7 @@
         atualizarCompetenciaNaTela(meta.competencia);
         await carregarParametrosProducao(meta.competencia);
         await carregarHistorico(meta.competencia);
+        await carregarAvaliacoesMeta(meta.competencia);
 
         const linhas = await carregarLinhasDaCompetencia(meta.competencia);
         window.dadosProducao.competencia = meta.competencia;
@@ -838,6 +909,7 @@
 
         window.dadosProducao.competencia = competenciaPrevia;
         window.dadosProducao.comentarios = {};
+        window.dadosProducao.avaliacoesMeta = {};
 
         processarProducao(linhasZeradas);
         atualizarDashboardProducao();

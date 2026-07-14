@@ -1,8 +1,10 @@
 const dadosProducao = {
     competencia: null,
+    linhasOriginais: [],
     funcionarios: [],
     metas: {},
     comentarios: {},
+    avaliacoesMeta: {},
     historico: [],
     parametros: {
         metas: {},
