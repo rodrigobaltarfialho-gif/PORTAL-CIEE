@@ -49,15 +49,19 @@ function iniciaisFuncionario(nome) {
 }
 
 function avatarFuncionario(funcionario, tamanho = "sm") {
-    const nome = funcionario?.nome || "";
-    const slug = slugFotoFuncionario(nome);
+    const nome = funcionario?.nome || funcionario?.email || "";
+    const slugs = [
+        slugFotoFuncionario(funcionario?.nome),
+        slugFotoFuncionario(funcionario?.email)
+    ].filter(Boolean);
+    const slugsUnicos = [...new Set(slugs)];
     const iniciais = iniciaisFuncionario(nome);
-    const caminhos = [
+    const caminhos = slugsUnicos.flatMap(slug => [
         `../../assets/funcionarios/${slug}.jpg`,
         `../../assets/funcionarios/${slug}.jpeg`,
         `../../assets/funcionarios/${slug}.png`,
         `../../assets/funcionarios/${slug}.png.png`
-    ];
+    ]);
 
     return `
         <span class="avatar avatar-${tamanho}">
@@ -79,6 +83,60 @@ function trocarFotoFuncionario(img) {
 
     img.style.display = "none";
     img.nextElementSibling.style.display = "grid";
+}
+
+function configurarPreviewFotosAvatares() {
+    if (window.previewFotosAvataresConfigurado) {
+        return;
+    }
+
+    const preview = document.createElement("img");
+    preview.className = "avatar-photo-preview";
+    preview.alt = "Foto do colaborador";
+    document.body.appendChild(preview);
+
+    function moverPreview(event) {
+        const largura = 190;
+        const altura = 190;
+        const margem = 16;
+        let left = event.clientX + 18;
+        let top = event.clientY - (altura / 2);
+
+        if (left + largura + margem > window.innerWidth) {
+            left = event.clientX - largura - 18;
+        }
+
+        top = Math.max(margem, Math.min(window.innerHeight - altura - margem, top));
+        preview.style.left = `${left}px`;
+        preview.style.top = `${top}px`;
+    }
+
+    document.addEventListener("mouseover", event => {
+        const img = event.target.closest?.(".avatar img");
+
+        if (!img || img.style.display === "none") {
+            return;
+        }
+
+        preview.src = img.currentSrc || img.src;
+        preview.alt = img.alt || "Foto do colaborador";
+        moverPreview(event);
+        preview.classList.add("show");
+    });
+
+    document.addEventListener("mousemove", event => {
+        if (preview.classList.contains("show")) {
+            moverPreview(event);
+        }
+    });
+
+    document.addEventListener("mouseout", event => {
+        if (event.target.closest?.(".avatar img")) {
+            preview.classList.remove("show");
+        }
+    });
+
+    window.previewFotosAvataresConfigurado = true;
 }
 
 function renderizarLinhaVazia(colunas, texto = "Aguardando importação.") {
@@ -1021,7 +1079,14 @@ function renderizarForcaTrabalho() {
     container.innerHTML = `
         <article class="capacity-gauge-card ${diagnostico.classe}">
             <div class="capacity-gauge" style="--gauge-angle:${angulo}deg">
+                <div class="capacity-gauge-face"></div>
                 <div class="capacity-gauge-arc"></div>
+                <div class="capacity-gauge-ticks" aria-hidden="true">
+                    <span class="tick tick-0">0</span>
+                    <span class="tick tick-60">60</span>
+                    <span class="tick tick-90">90</span>
+                    <span class="tick tick-120">120</span>
+                </div>
                 <div class="capacity-gauge-needle"></div>
                 <div class="capacity-gauge-center"></div>
             </div>
@@ -2194,6 +2259,7 @@ document.addEventListener("click", () => {
 });
 
 function atualizarDashboardProducao() {
+    configurarPreviewFotosAvatares();
     renderizarIndicadoresProducao();
     renderizarForcaTrabalho();
     renderizarMetasPorCelula();

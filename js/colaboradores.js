@@ -100,37 +100,95 @@
         img.nextElementSibling.style.display = "grid";
     };
 
-    function avatarColaborador(nome) {
-        const slug = slugFotoFuncionario(nome);
-        const iniciais = iniciaisFuncionario(nome);
-        const caminhos = [
+    function configurarPreviewFotosAvatares() {
+        if (window.previewFotosAvataresConfigurado) {
+            return;
+        }
+
+        const preview = document.createElement("img");
+        preview.className = "avatar-photo-preview";
+        preview.alt = "Foto do colaborador";
+        document.body.appendChild(preview);
+
+        function moverPreview(event) {
+            const largura = 190;
+            const altura = 190;
+            const margem = 16;
+            let left = event.clientX + 18;
+            let top = event.clientY - (altura / 2);
+
+            if (left + largura + margem > window.innerWidth) {
+                left = event.clientX - largura - 18;
+            }
+
+            top = Math.max(margem, Math.min(window.innerHeight - altura - margem, top));
+            preview.style.left = `${left}px`;
+            preview.style.top = `${top}px`;
+        }
+
+        document.addEventListener("mouseover", event => {
+            const img = event.target.closest?.(".avatar img");
+
+            if (!img || img.style.display === "none") {
+                return;
+            }
+
+            preview.src = img.currentSrc || img.src;
+            preview.alt = img.alt || "Foto do colaborador";
+            moverPreview(event);
+            preview.classList.add("show");
+        });
+
+        document.addEventListener("mousemove", event => {
+            if (preview.classList.contains("show")) {
+                moverPreview(event);
+            }
+        });
+
+        document.addEventListener("mouseout", event => {
+            if (event.target.closest?.(".avatar img")) {
+                preview.classList.remove("show");
+            }
+        });
+
+        window.previewFotosAvataresConfigurado = true;
+    }
+
+    function caminhosFotoFuncionario(nome, email) {
+        const slugs = [
+            slugFotoFuncionario(nome),
+            slugFotoFuncionario(email)
+        ].filter(Boolean);
+
+        return [...new Set(slugs)].flatMap(slug => [
             `../../assets/funcionarios/${slug}.jpg`,
             `../../assets/funcionarios/${slug}.jpeg`,
             `../../assets/funcionarios/${slug}.png`,
             `../../assets/funcionarios/${slug}.png.png`
-        ];
+        ]);
+    }
+
+    function avatarColaborador(nome, email = "") {
+        const rotulo = nome || email;
+        const iniciais = iniciaisFuncionario(rotulo);
+        const caminhos = caminhosFotoFuncionario(nome, email);
 
         return `
             <span id="colaboradorAvatar" class="avatar avatar-lg">
-                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(nome)}" onerror="trocarFotoColaborador(this);">
+                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(rotulo)}" onerror="trocarFotoColaborador(this);">
                 <b>${escaparHtml(iniciais)}</b>
             </span>
         `;
     }
 
-    function avatarDestaque(nome) {
-        const slug = slugFotoFuncionario(nome);
-        const iniciais = iniciaisFuncionario(nome);
-        const caminhos = [
-            `../../assets/funcionarios/${slug}.jpg`,
-            `../../assets/funcionarios/${slug}.jpeg`,
-            `../../assets/funcionarios/${slug}.png`,
-            `../../assets/funcionarios/${slug}.png.png`
-        ];
+    function avatarDestaque(nome, email = "") {
+        const rotulo = nome || email;
+        const iniciais = iniciaisFuncionario(rotulo);
+        const caminhos = caminhosFotoFuncionario(nome, email);
 
         return `
             <span class="avatar podium-avatar">
-                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(nome)}" onerror="trocarFotoColaborador(this);">
+                <img src="${caminhos[0]}" data-fallbacks='${JSON.stringify(caminhos.slice(1))}' alt="${escaparHtml(rotulo)}" onerror="trocarFotoColaborador(this);">
                 <b>${escaparHtml(iniciais)}</b>
             </span>
         `;
@@ -215,6 +273,7 @@
     }
 
     async function carregarDados() {
+        configurarPreviewFotosAvatares();
         estado.competencias = await listarCompetencias();
 
         if (!estado.competencias.length) {
@@ -784,7 +843,7 @@ return `
         const tendencia = obterTendencia(meses);
 
         painel.hidden = false;
-        document.getElementById("colaboradorAvatar").outerHTML = avatarColaborador(colaborador.nome);
+        document.getElementById("colaboradorAvatar").outerHTML = avatarColaborador(colaborador.nome, colaborador.email);
         document.getElementById("colaboradorNome").textContent = colaborador.nome;
         document.getElementById("colaboradorSubtitulo").textContent = `${colaborador.celula || "-"} | ${colaborador.email || "-"} | ${colaborador.jornada?.tipo || "-"}`;
         document.getElementById("colaboradorUltimaMeta").textContent = `${formatarNumero(ultimo?.percentual || 0)}%`;

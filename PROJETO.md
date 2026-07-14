@@ -1,4 +1,4 @@
-# Portal CIEE - Modelo de Dados
+# Portal Operacional - Modelo de Dados
 
 ## Módulo principal: Produção
 
