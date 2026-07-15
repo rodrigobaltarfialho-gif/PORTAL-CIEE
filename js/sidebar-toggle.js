@@ -28,3 +28,29 @@
     aplicarEstado(localStorage.getItem(chave) === "1");
     botao.addEventListener("click", () => aplicarEstado(!document.body.classList.contains("sidebar-collapsed")));
 })();
+
+(function configurarVoltarAoTopo() {
+    if (document.getElementById("voltarTopoPortal")) {
+        return;
+    }
+
+    const botao = document.createElement("button");
+    botao.id = "voltarTopoPortal";
+    botao.className = "back-to-top";
+    botao.type = "button";
+    botao.setAttribute("aria-label", "Voltar para o topo");
+    botao.title = "Voltar para o topo";
+    botao.innerHTML = "<span aria-hidden=\"true\">↑</span>";
+    document.body.appendChild(botao);
+
+    function atualizarVisibilidade() {
+        botao.classList.toggle("is-visible", window.scrollY > 260);
+    }
+
+    botao.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    window.addEventListener("scroll", atualizarVisibilidade, { passive: true });
+    atualizarVisibilidade();
+})();

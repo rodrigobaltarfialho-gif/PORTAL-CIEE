@@ -32,7 +32,7 @@
                 <div>
                     <span class="eyebrow">Administração</span>
                     <h1>Cadastro de logins</h1>
-                    <p>Crie novos acessos simples para o portal. O usuário Rodrigo permanece como administrador principal.</p>
+                    <p>Crie acessos, defina hierarquia e selecione quais módulos cada perfil de visualização pode abrir.</p>
                 </div>
             </header>
 
@@ -41,7 +41,7 @@
                     <div class="section-heading">
                         <div>
                             <h2>Novo login</h2>
-                            <p>Cadastre usuário e senha para acesso ao portal.</p>
+                            <p>Admins acessam tudo. Perfis de visualização acessam apenas os módulos selecionados.</p>
                         </div>
                     </div>
 
@@ -58,6 +58,17 @@
                             <span>Senha</span>
                             <input type="password" id="usuarioSenha" required>
                         </label>
+                        <label>
+                            <span>Perfil</span>
+                            <select id="usuarioPerfil">
+                                <option value="visualizacao">Visualização</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </label>
+                        <div class="user-module-access" id="usuarioModulosBox">
+                            <span>Módulos permitidos</span>
+                            <div id="usuarioModulos" class="parameter-checkbox-list"></div>
+                        </div>
                         <button type="submit">Cadastrar login</button>
                     </form>
                 </article>
@@ -77,11 +88,13 @@
                                     <th>Nome</th>
                                     <th>Usuario</th>
                                     <th>Perfil</th>
+                                    <th>Senha</th>
+                                    <th>Módulos</th>
                                     <th>Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="tabelaUsuarios">
-                                <tr><td colspan="4">Nenhum usuário cadastrado.</td></tr>
+                                <tr><td colspan="6">Nenhum usuário cadastrado.</td></tr>
                             </tbody>
                         </table>
                     </div>

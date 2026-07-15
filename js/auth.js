@@ -1,6 +1,16 @@
 (function configurarAutenticacao() {
+    const MODULOS_PORTAL = [
+        { id: "home", nome: "Menu", caminho: "index.html", padrao: true },
+        { id: "sazonalidade", nome: "Sazonalidade", caminho: "modulos/sazonalidade/index.html" },
+        { id: "desligamentos", nome: "Desligamentos", caminho: "modulos/desligamentos/index.html" },
+        { id: "producao", nome: "Produção", caminho: "modulos/producao/index.html" },
+        { id: "colaboradores", nome: "Colaboradores", caminho: "modulos/colaboradores/index.html" },
+        { id: "importar-producao", nome: "Importar dados", caminho: "modulos/importar-producao/index.html" },
+        { id: "memoria-calculo", nome: "Memória de cálculo", caminho: "modulos/memoria-calculo/index.html" },
+        { id: "usuarios", nome: "Usuários", caminho: "modulos/usuarios/index.html", admin: true }
+    ];
     const USUARIOS_PADRAO = [
-        { usuario: "Rodrigo", senha: "000", nome: "Rodrigo", perfil: "admin", fixo: true }
+        { usuario: "Rodrigo", senha: "000", nome: "Rodrigo", perfil: "admin", modulos: ["todos"], fixo: true }
     ];
     const CHAVE_SESSAO = "portal_ciee_sessao";
     const COLECAO_USUARIOS = "usuarios_login";
@@ -30,6 +40,117 @@
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, "-")
             .replace(/(^-|-$)/g, "");
+    }
+
+    function normalizarPerfil(perfil) {
+        return perfil === "admin" ? "admin" : "visualizacao";
+    }
+
+    function normalizarModulosUsuario(usuario) {
+        if (normalizarPerfil(usuario?.perfil) === "admin") {
+            return ["todos"];
+        }
+
+        const permitidos = new Set(MODULOS_PORTAL.filter(modulo => !modulo.admin).map(modulo => modulo.id));
+        const modulos = Array.isArray(usuario?.modulos) ? usuario.modulos : [];
+        const filtrados = modulos.filter(modulo => permitidos.has(modulo));
+
+        return filtrados.length ? [...new Set(filtrados)] : ["home"];
+    }
+
+    function normalizarUsuario(usuario) {
+        const perfil = normalizarPerfil(usuario?.perfil);
+
+        return {
+            ...usuario,
+            perfil,
+            modulos: perfil === "admin" ? ["todos"] : normalizarModulosUsuario({ ...usuario, perfil })
+        };
+    }
+
+    function moduloAtual() {
+        const path = location.pathname.toLowerCase().replace(/\\/g, "/");
+
+        if (path.endsWith("/login.html")) {
+            return "login";
+        }
+
+        if (path.includes("/modulos/sazonalidade/")) return "sazonalidade";
+        if (path.includes("/modulos/desligamentos/")) return "desligamentos";
+        if (path.includes("/modulos/producao/")) return "producao";
+        if (path.includes("/modulos/colaboradores/")) return "colaboradores";
+        if (path.includes("/modulos/importar-producao/")) return "importar-producao";
+        if (path.includes("/modulos/memoria-calculo/")) return "memoria-calculo";
+        if (path.includes("/modulos/usuarios/")) return "usuarios";
+
+        return "home";
+    }
+
+    function usuarioPodeAcessar(usuario, moduloId) {
+        const usuarioNormalizado = normalizarUsuario(usuario || {});
+
+        if (usuarioNormalizado.perfil === "admin") {
+            return true;
+        }
+
+        if (moduloId === "usuarios") {
+            return false;
+        }
+
+        return usuarioNormalizado.modulos.includes(moduloId);
+    }
+
+    function caminhoModulo(moduloId) {
+        const modulo = MODULOS_PORTAL.find(item => item.id === moduloId) || MODULOS_PORTAL[0];
+        return `${caminhoBase()}${modulo.caminho}`;
+    }
+
+    function caminhoInicialPermitido(usuario) {
+        const usuarioNormalizado = normalizarUsuario(usuario);
+
+        if (usuarioNormalizado.perfil === "admin") {
+            return caminhoInicial;
+        }
+
+        return caminhoModulo(usuarioNormalizado.modulos[0] || "home");
+    }
+
+    function nomeModulo(moduloId) {
+        return MODULOS_PORTAL.find(item => item.id === moduloId)?.nome || "este módulo";
+    }
+
+    function renderizarAcessoNegado(moduloId, sessao) {
+        const conteudo = document.querySelector(".content") || document.body;
+
+        if (!conteudo || document.getElementById("portalAcessoNegado")) {
+            return;
+        }
+
+        document.body.classList.add("access-denied-mode");
+
+        const card = document.createElement("section");
+        card.id = "portalAcessoNegado";
+        card.className = "access-denied-card";
+        card.innerHTML = `
+            <div class="access-denied-emoji" aria-hidden="true">😅</div>
+            <span class="eyebrow">Acesso restrito</span>
+            <h1>Eu sei que o projeto está maneiro...</h1>
+            <p>Mas a área <strong>${nomeModulo(moduloId)}</strong> ainda não está liberada para o seu perfil. Chama um admin se esse acesso fizer sentido para você.</p>
+            <a class="primary-link-button" href="${caminhoInicialPermitido(sessao)}">Voltar para uma área liberada</a>
+        `;
+
+        conteudo.prepend(card);
+    }
+
+    function prepararAcessoNegado(moduloId, sessao) {
+        window.portalAcessoBloqueado = true;
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => renderizarAcessoNegado(moduloId, sessao), { once: true });
+            return;
+        }
+
+        renderizarAcessoNegado(moduloId, sessao);
     }
 
     async function obterFirebase() {
@@ -70,11 +191,10 @@
                 const data = item.data();
 
                 if (data.usuario && data.senha) {
-                    usuarios.push({
+                    usuarios.push(normalizarUsuario({
                         id: item.id,
-                        perfil: "usuario",
                         ...data
-                    });
+                    }));
                 }
             });
 
@@ -89,8 +209,16 @@
         const mapa = new Map();
         const cadastrados = await listarUsuariosFirebase();
 
-        USUARIOS_PADRAO.forEach(usuario => mapa.set(usuario.usuario.toLowerCase(), usuario));
-        cadastrados.forEach(usuario => mapa.set(usuario.usuario.toLowerCase(), usuario));
+        USUARIOS_PADRAO.forEach(usuario => mapa.set(usuario.usuario.toLowerCase(), normalizarUsuario(usuario)));
+        cadastrados.forEach(usuario => {
+            const chave = usuario.usuario.toLowerCase();
+            const existente = mapa.get(chave) || {};
+            mapa.set(chave, normalizarUsuario({
+                ...existente,
+                ...usuario,
+                fixo: Boolean(existente.fixo || usuario.fixo)
+            }));
+        });
 
         return [...mapa.values()];
     }
@@ -107,7 +235,8 @@
             nome: usuario.nome,
             usuario: usuario.usuario,
             senha: usuario.senha,
-            perfil: usuario.perfil || "usuario",
+            perfil: normalizarPerfil(usuario.perfil),
+            modulos: normalizarModulosUsuario(usuario),
             atualizadoEm: firestore.serverTimestamp()
         }, { merge: true });
     }
@@ -118,10 +247,13 @@
     }
 
     function salvarSessao(usuario) {
+        const usuarioNormalizado = normalizarUsuario(usuario);
+
         sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify({
             usuario: usuario.usuario,
             nome: usuario.nome,
-            perfil: usuario.perfil || "usuario",
+            perfil: usuarioNormalizado.perfil,
+            modulos: usuarioNormalizado.modulos,
             iniciadoEm: new Date().toISOString()
         }));
     }
@@ -133,21 +265,14 @@
 
     async function usuarioValido(usuario, senha) {
         const usuarioNormalizado = String(usuario || "").trim().toLowerCase();
-        const usuarioPadrao = USUARIOS_PADRAO.find(item =>
-            item.usuario.toLowerCase() === usuarioNormalizado &&
-            item.senha === String(senha || "")
-        );
-
-        if (usuarioPadrao) {
-            return usuarioPadrao;
-        }
-
         const usuarios = await listarUsuarios();
 
-        return usuarios.find(item =>
+        const encontrado = usuarios.find(item =>
             item.usuario.toLowerCase() === usuarioNormalizado &&
             item.senha === String(senha || "")
         );
+
+        return encontrado ? normalizarUsuario(encontrado) : null;
     }
 
     function protegerPagina() {
@@ -162,8 +287,10 @@
             return;
         }
 
-        if (paginaUsuarios && sessao.perfil !== "admin") {
-            location.replace(caminhoInicial);
+        const modulo = moduloAtual();
+
+        if (!usuarioPodeAcessar(sessao, modulo)) {
+            prepararAcessoNegado(modulo, sessao);
         }
     }
 
@@ -201,7 +328,28 @@
             }
 
             salvarSessao(encontrado);
-            location.replace(caminhoInicial);
+            location.replace(caminhoInicialPermitido(encontrado));
+        });
+    }
+
+    function configurarVisibilidadeNavegacao() {
+        const sessao = obterSessao();
+
+        if (!sessao || paginaLogin) {
+            return;
+        }
+
+        document.querySelectorAll(".sidebar nav a").forEach(link => {
+            const href = link.getAttribute("href") || "";
+            const modulo = MODULOS_PORTAL
+                .filter(item => item.id !== "home")
+                .find(item => href.includes(item.caminho) || href.includes(item.caminho.replace("modulos/", "../")))
+                || (href.includes("index.html") && !href.includes("/modulos/") && !href.includes("../") ? MODULOS_PORTAL[0] : null)
+                || (href.endsWith("../../index.html") ? MODULOS_PORTAL[0] : null);
+
+            if (modulo && !usuarioPodeAcessar(sessao, modulo.id)) {
+                link.remove();
+            }
         });
     }
 
@@ -222,7 +370,7 @@
             const link = document.createElement("a");
             link.id = "linkUsuariosPortal";
             link.href = `${caminhoBase()}modulos/usuarios/index.html`;
-            link.innerHTML = `<span class="nav-icon nav-icon-users" aria-hidden="true"></span>Usuarios`;
+            link.innerHTML = `<span class="nav-icon nav-icon-users" aria-hidden="true"></span>Usuários`;
             nav.appendChild(link);
         }
 
@@ -240,12 +388,16 @@
         listarUsuarios,
         salvarUsuario,
         removerUsuario,
+        modulosDisponiveis: () => MODULOS_PORTAL.map(item => ({ ...item })),
+        usuarioPodeAcessar,
+        normalizarUsuario,
         usuarioAdmin: () => obterSessao()?.perfil === "admin"
     };
 
     protegerPagina();
     document.addEventListener("DOMContentLoaded", () => {
         configurarLogin();
+        configurarVisibilidadeNavegacao();
         inserirBotaoSair();
     });
 })();

@@ -41,6 +41,12 @@ input {
 }
 
 .sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    min-height: 100vh;
+    max-height: 100vh;
+    overflow-y: auto;
     background: linear-gradient(180deg, var(--azul), #00294f);
     color: white;
     padding: 28px 22px;
@@ -98,10 +104,49 @@ body.sidebar-collapsed .sidebar-toggle::before {
     transform: none;
 }
 
+.back-to-top {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 1000;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(216, 227, 239, .92);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--azul);
+    box-shadow: 0 10px 22px rgba(0, 59, 113, .18);
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: 950;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity .2s ease, transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.back-to-top.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.back-to-top:hover {
+    background: #fff7ed;
+    box-shadow: 0 14px 28px rgba(0, 59, 113, .24);
+}
+
 @media (max-width: 980px) {
     .sidebar-toggle,
     body.sidebar-collapsed .sidebar-toggle {
         left: 0;
+    }
+
+    .back-to-top {
+        right: 12px;
     }
 }
 
@@ -293,6 +338,63 @@ body.sidebar-collapsed .sidebar-toggle::before {
     background: #fbfdff;
     color: var(--texto);
     padding: 11px;
+}
+
+.user-form select,
+.user-profile-select,
+.user-password-input {
+    width: 100%;
+    border: 1px solid var(--borda);
+    border-radius: var(--radius);
+    background: #fbfdff;
+    color: var(--texto);
+    padding: 11px;
+}
+
+.user-module-access {
+    display: grid;
+    gap: 8px;
+}
+
+.user-module-access > span {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.user-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.user-action-row .secondary-button {
+    padding: 8px 10px;
+    white-space: nowrap;
+}
+
+.user-modules-inline {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    gap: 6px 10px;
+    min-width: 280px;
+}
+
+.user-modules-inline label,
+.parameter-checkbox-list label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--texto);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.user-modules-inline input,
+.parameter-checkbox-list input {
+    width: auto;
+    accent-color: var(--azul-2);
 }
 
 .nav-icon {
@@ -561,6 +663,70 @@ body.sidebar-collapsed .sidebar-toggle::before {
 
 .content {
     padding: 28px;
+}
+
+.access-denied-mode .content > :not(.access-denied-card) {
+    display: none !important;
+}
+
+.access-denied-card {
+    min-height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.access-denied-emoji {
+    width: 96px;
+    height: 96px;
+    display: grid;
+    place-items: center;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #fff7ed, #eaf6ff);
+    border: 1px solid var(--borda);
+    box-shadow: var(--sombra);
+    font-size: 54px;
+}
+
+.access-denied-card h1 {
+    max-width: 720px;
+    color: var(--azul);
+    font-size: clamp(30px, 5vw, 54px);
+    font-weight: 950;
+    line-height: 1;
+}
+
+.access-denied-card p {
+    max-width: 620px;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.55;
+}
+
+.access-denied-card strong {
+    color: var(--azul);
+}
+
+.primary-link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: var(--radius);
+    background: var(--azul);
+    color: #ffffff;
+    padding: 12px 18px;
+    font-weight: 900;
+    text-decoration: none;
+    box-shadow: 0 12px 24px rgba(0, 59, 113, .18);
+}
+
+.primary-link-button:hover {
+    background: var(--azul-2);
 }
 
 .topbar,
@@ -3253,6 +3419,9 @@ tbody tr:last-child td {
 
     .sidebar {
         position: static;
+        min-height: auto;
+        max-height: none;
+        overflow-y: visible;
     }
 
     .sidebar nav {
